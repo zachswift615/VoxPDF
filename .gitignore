@@ -44,3 +44,6 @@ _site/
 tmp/
 temp/
 *.tmp
+
+# Git worktrees
+.worktrees/
