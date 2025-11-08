@@ -1,6 +1,6 @@
+use super::content_stream::decode_content_stream;
 use crate::error::{Result, VoxPDFError};
 use crate::pdf::PDFDocument;
-use super::content_stream::decode_content_stream;
 
 pub fn extract_page_text(doc: &PDFDocument, page_num: u32) -> Result<String> {
     let pages = doc.doc.get_pages();
@@ -32,11 +32,13 @@ fn extract_text_from_content_stream(doc: &PDFDocument, page_num: u32) -> Result<
 
     // Get page dictionary
     let page_obj = doc.doc.get_object(*page_id)?;
-    let page_dict = page_obj.as_dict()
+    let page_dict = page_obj
+        .as_dict()
         .map_err(|_| VoxPDFError::ExtractionError("Page is not a dictionary".to_string()))?;
 
     // Get contents reference
-    let contents_ref = page_dict.get(b"Contents")
+    let contents_ref = page_dict
+        .get(b"Contents")
         .map_err(|_| VoxPDFError::ExtractionError("No Contents in page".to_string()))?;
 
     // Decode content stream (using the same approach as words.rs)

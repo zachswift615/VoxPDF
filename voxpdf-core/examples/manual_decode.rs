@@ -1,5 +1,5 @@
-use lopdf::{Document, Object};
 use flate2::read::ZlibDecoder;
+use lopdf::{Document, Object};
 use std::io::Read;
 
 fn main() {
@@ -30,7 +30,11 @@ fn main() {
             // Try to manually decode ASCII85
             println!("\n=== Manual ASCII85 Decode ===");
             let ascii85_str = String::from_utf8_lossy(raw_data);
-            println!("ASCII85 string (len={}): {}", ascii85_str.len(), ascii85_str);
+            println!(
+                "ASCII85 string (len={}): {}",
+                ascii85_str.len(),
+                ascii85_str
+            );
 
             // Check if it already has the end marker
             let to_decode = if ascii85_str.contains("~>") {
@@ -46,7 +50,10 @@ fn main() {
             match ascii85::decode(&to_decode) {
                 Ok(decoded_ascii85) => {
                     println!("ASCII85 decoded {} bytes", decoded_ascii85.len());
-                    println!("First 100 bytes: {:?}", &decoded_ascii85[..decoded_ascii85.len().min(100)]);
+                    println!(
+                        "First 100 bytes: {:?}",
+                        &decoded_ascii85[..decoded_ascii85.len().min(100)]
+                    );
 
                     // Now try Flate decompression
                     println!("\n=== Flate Decompression ===");

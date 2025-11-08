@@ -48,13 +48,18 @@ pub(crate) fn decode_content_stream(doc: &lopdf::Document, contents: &Object) ->
                                 format!("<~{}~>", ascii85_str)
                             };
 
-                            let decoded_ascii85 = ascii85::decode(&to_decode)
-                                .map_err(|e| VoxPDFError::ExtractionError(format!("ASCII85 decode error: {:?}", e)))?;
+                            let decoded_ascii85 = ascii85::decode(&to_decode).map_err(|e| {
+                                VoxPDFError::ExtractionError(format!(
+                                    "ASCII85 decode error: {:?}",
+                                    e
+                                ))
+                            })?;
 
                             let mut decoder = ZlibDecoder::new(&decoded_ascii85[..]);
                             let mut decompressed = Vec::new();
-                            decoder.read_to_end(&mut decompressed)
-                                .map_err(|e| VoxPDFError::ExtractionError(format!("Flate decode error: {:?}", e)))?;
+                            decoder.read_to_end(&mut decompressed).map_err(|e| {
+                                VoxPDFError::ExtractionError(format!("Flate decode error: {:?}", e))
+                            })?;
 
                             return Ok(String::from_utf8_lossy(&decompressed).to_string());
                         }
@@ -64,12 +69,19 @@ pub(crate) fn decode_content_stream(doc: &lopdf::Document, contents: &Object) ->
                 // Fall back to lopdf's decompression
                 match stream.decompressed_content() {
                     Ok(data) => Ok(String::from_utf8_lossy(&data).to_string()),
-                    Err(e) => Err(VoxPDFError::ExtractionError(format!("Failed to decompress stream: {:?}", e)))
+                    Err(e) => Err(VoxPDFError::ExtractionError(format!(
+                        "Failed to decompress stream: {:?}",
+                        e
+                    ))),
                 }
             } else {
-                Err(VoxPDFError::ExtractionError("Content is not a stream".to_string()))
+                Err(VoxPDFError::ExtractionError(
+                    "Content is not a stream".to_string(),
+                ))
             }
         }
-        _ => Err(VoxPDFError::ExtractionError("Unexpected Contents type".to_string()))
+        _ => Err(VoxPDFError::ExtractionError(
+            "Unexpected Contents type".to_string(),
+        )),
     }
 }

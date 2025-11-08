@@ -1,5 +1,5 @@
-use voxpdf_core::PDFDocument;
 use voxpdf_core::extraction::extract_page_text;
+use voxpdf_core::PDFDocument;
 
 #[test]
 fn test_extract_simple_text() {

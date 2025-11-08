@@ -12,11 +12,11 @@ public class PDFDocument {
         var error: CVoxPDFError = CVoxPDFErrorOk
 
         guard let handle = voxpdf_open(url.path, &error) else {
-            throw VoxPDFError(code: Int32(error.rawValue))
+            throw VoxPDFError(code: Int32(error.rawValue), context: url.path)
         }
 
         if error.rawValue != 0 {
-            throw VoxPDFError(code: Int32(error.rawValue))
+            throw VoxPDFError(code: Int32(error.rawValue), context: url.path)
         }
 
         self.handle = handle
@@ -38,7 +38,11 @@ public class PDFDocument {
         )
 
         guard result, error.rawValue == 0, let ptr = textPtr else {
-            throw VoxPDFError(code: Int32(error.rawValue))
+            if error.rawValue == 2 {
+                // Page not found - include context
+                throw VoxPDFError.pageNotFound(page: page, totalPages: self.pageCount)
+            }
+            throw VoxPDFError(code: Int32(error.rawValue), context: "page \(page)")
         }
 
         defer { voxpdf_free_string(UnsafeMutablePointer(mutating: ptr)) }
@@ -51,7 +55,10 @@ public class PDFDocument {
 
         let count = voxpdf_get_word_count(handle, UInt32(page), &error)
         guard error.rawValue == 0 else {
-            throw VoxPDFError(code: Int32(error.rawValue))
+            if error.rawValue == 2 {
+                throw VoxPDFError.pageNotFound(page: page, totalPages: self.pageCount)
+            }
+            throw VoxPDFError(code: Int32(error.rawValue), context: "page \(page)")
         }
 
         var words: [Word] = []
@@ -71,7 +78,10 @@ public class PDFDocument {
             )
 
             guard result, error.rawValue == 0, let ptr = textPtr else {
-                throw VoxPDFError(code: Int32(error.rawValue))
+                if error.rawValue == 2 {
+                    throw VoxPDFError.pageNotFound(page: page, totalPages: self.pageCount)
+                }
+                throw VoxPDFError(code: Int32(error.rawValue), context: "page \(page), word \(index)")
             }
 
             let text = String(cString: ptr)

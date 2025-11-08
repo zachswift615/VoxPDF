@@ -1,4 +1,4 @@
-use lopdf::{Document, content::Content};
+use lopdf::{content::Content, Document};
 
 fn main() {
     let doc = Document::load("tests/fixtures/simple.pdf").expect("Failed to load PDF");
@@ -25,7 +25,9 @@ fn main() {
                     // Try using lopdf's Content API
                     match doc.get_and_decode_page_content(*page_id) {
                         Ok(content) => {
-                            println!("\n=== Decoded Page Content (Content object with operations) ===");
+                            println!(
+                                "\n=== Decoded Page Content (Content object with operations) ==="
+                            );
                             for (i, op) in content.operations.iter().enumerate() {
                                 println!("Op {}: {:?}", i, op);
                             }

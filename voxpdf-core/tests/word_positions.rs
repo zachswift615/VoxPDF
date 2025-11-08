@@ -1,5 +1,5 @@
-use voxpdf_core::PDFDocument;
 use voxpdf_core::extraction::extract_word_positions;
+use voxpdf_core::PDFDocument;
 
 #[test]
 fn test_extract_word_positions_simple() {

@@ -1,3 +1,3 @@
 mod word;
 
-pub use word::{Word, Rect};
+pub use word::{Rect, Word};

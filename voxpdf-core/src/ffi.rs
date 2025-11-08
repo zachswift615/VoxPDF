@@ -1,7 +1,7 @@
-use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
 use crate::error::VoxPDFError;
 use crate::pdf::PDFDocument;
+use std::ffi::{CStr, CString};
+use std::os::raw::c_char;
 
 // Error codes for FFI
 #[repr(C)]
@@ -133,19 +133,17 @@ pub unsafe extern "C" fn voxpdf_extract_page_text(
     let doc = &*(doc as *const PDFDocument);
 
     match crate::extraction::extract_page_text(doc, page) {
-        Ok(text) => {
-            match CString::new(text) {
-                Ok(c_str) => {
-                    *text_out = c_str.into_raw();
-                    *error_out = CVoxPDFError::Ok;
-                    true
-                }
-                Err(_) => {
-                    *error_out = CVoxPDFError::InvalidText;
-                    false
-                }
+        Ok(text) => match CString::new(text) {
+            Ok(c_str) => {
+                *text_out = c_str.into_raw();
+                *error_out = CVoxPDFError::Ok;
+                true
             }
-        }
+            Err(_) => {
+                *error_out = CVoxPDFError::InvalidText;
+                false
+            }
+        },
         Err(e) => {
             *error_out = e.into();
             false
@@ -317,7 +315,11 @@ mod tests {
             assert_eq!(error, CVoxPDFError::Ok);
 
             let mut word_pos = CWordPosition {
-                x: 0.0, y: 0.0, width: 0.0, height: 0.0, page: 0,
+                x: 0.0,
+                y: 0.0,
+                width: 0.0,
+                height: 0.0,
+                page: 0,
             };
             let mut text_ptr: *const c_char = std::ptr::null();
 
