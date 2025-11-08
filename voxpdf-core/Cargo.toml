@@ -30,6 +30,10 @@ once_cell = "1.19"  # Lazy statics
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
+# Stream decoding (workaround for lopdf ASCII85+Flate bug)
+flate2 = "1.0"
+ascii85 = "0.1"
+
 [dev-dependencies]
 # Testing
 criterion = "0.5"  # Benchmarking
@@ -39,9 +43,10 @@ proptest = "1.4"   # Property-based testing
 default = []
 # mupdf = ["mupdf-sys"]  # Alternative PDF backend (future)
 
-[[bench]]
-name = "extraction"
-harness = false
+# Benchmarks will be added during implementation
+# [[bench]]
+# name = "extraction"
+# harness = false
 
 [profile.release]
 opt-level = 3

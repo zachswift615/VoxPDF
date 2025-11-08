@@ -35,6 +35,12 @@ pub enum VoxPDFError {
     /// Automatically converted from `lopdf::Error`.
     #[error("lopdf error: {0}")]
     Lopdf(#[from] lopdf::Error),
+
+    /// Error occurred during text extraction.
+    ///
+    /// This includes parsing errors, unsupported PDF features, etc.
+    #[error("Extraction error: {0}")]
+    ExtractionError(String),
 }
 
 /// Type alias for Results using [`VoxPDFError`].
