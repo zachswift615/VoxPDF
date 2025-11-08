@@ -1,0 +1,50 @@
+[package]
+name = "voxpdf-core"
+version = "0.0.1"
+edition = "2021"
+authors = ["VoxPDF Contributors"]
+license = "MIT"
+description = "Cross-platform PDF text extraction library optimized for text-to-speech"
+repository = "https://github.com/yourusername/voxpdf"
+keywords = ["pdf", "tts", "text-to-speech", "accessibility", "extraction"]
+categories = ["parsing", "accessibility"]
+readme = "../README.md"
+
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]  # Support Rust API + FFI
+
+[dependencies]
+# PDF parsing - start with lopdf (pure Rust), can add mupdf-sys later
+lopdf = "0.32"
+
+# Text processing
+unicode-segmentation = "1.11"  # Word/grapheme boundaries
+
+# Error handling
+thiserror = "1.0"
+
+# Utilities
+once_cell = "1.19"  # Lazy statics
+
+# Serialization (for FFI and tests)
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+# Testing
+criterion = "0.5"  # Benchmarking
+proptest = "1.4"   # Property-based testing
+
+[features]
+default = []
+# mupdf = ["mupdf-sys"]  # Alternative PDF backend (future)
+
+[[bench]]
+name = "extraction"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

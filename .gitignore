@@ -1,0 +1,46 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Swift
+.build/
+.swiftpm/
+*.xcworkspace
+xcuserdata/
+DerivedData/
+*.xcodeproj/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Build artifacts
+*.dylib
+*.so
+*.dll
+*.a
+*.lib
+
+# Test artifacts
+test-results/
+*.log
+
+# Documentation builds
+_site/
+.jekyll-cache/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
