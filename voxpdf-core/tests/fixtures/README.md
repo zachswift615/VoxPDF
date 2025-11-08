@@ -56,9 +56,16 @@ Format:
 }
 ```
 
-## Future Fixtures (TODO)
+## ai-agents-book.pdf
 
-### toc.pdf
-- Multiple pages
-- Has PDF outline with chapters/bookmarks
-- For testing TOC extraction
+**Source:** "Building Applications with AI Agents: Designing and Implementing Multiagent Systems" by Michael Albada
+
+**Specification:**
+- Multiple pages (20MB PDF)
+- Has complete PDF outline/bookmarks for table of contents
+- Real-world test case for TOC extraction
+
+**Purpose:**
+- Tests TOC extraction with hierarchical chapter structure
+- Validates outline parsing with real PDF metadata
+- Performance test for larger documents
