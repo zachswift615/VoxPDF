@@ -108,22 +108,69 @@ fn parse_content_operations(operations: &[lopdf::content::Operation], page_num: 
             }
             "TJ" => {
                 // Show text array: [(string1) kerning (string2) ...] TJ
+                // Array alternates between strings and numbers (kerning adjustments)
+                // Small adjustments (<100) are kerning, large ones (>=100) are word spaces
                 if !op.operands.is_empty() {
                     if let Ok(array) = op.operands[0].as_array() {
+                        let mut current_word = String::new();
+                        let mut word_start_x = current_x;
+
                         for item in array {
                             if let Ok(text) = item.as_str() {
+                                // This is a text fragment
                                 let text_str = String::from_utf8_lossy(text).to_string();
-                                if !text_str.trim().is_empty() {
-                                    let width = text_str.len() as f32 * font_size * 0.5;
-                                    words.push(Word::new(
-                                        text_str,
-                                        Rect::new(current_x, current_y, width, font_size),
-                                        page_num,
-                                    ));
-                                    // Advance x position (rough approximation)
-                                    current_x += width;
+                                current_word.push_str(&text_str);
+
+                                // If text ends with space, it's a word boundary
+                                if text_str.ends_with(' ') {
+                                    if !current_word.trim().is_empty() {
+                                        let width = current_word.len() as f32 * font_size * 0.5;
+                                        words.push(Word::new(
+                                            current_word.trim().to_string(),
+                                            Rect::new(word_start_x, current_y, width, font_size),
+                                            page_num,
+                                        ));
+                                        current_x = word_start_x + width;
+                                    }
+                                    current_word.clear();
+                                    word_start_x = current_x;
+                                }
+                            } else if let Ok(adjustment) = item.as_f32().or_else(|_| item.as_i64().map(|i| i as f32)) {
+                                // This is a kerning/spacing adjustment
+                                // Negative values = increase space, positive = decrease space
+                                // Large adjustments (abs >= 100) indicate word boundaries
+                                if adjustment.abs() >= 100.0 {
+                                    // Large gap - finish current word
+                                    if !current_word.trim().is_empty() {
+                                        let width = current_word.len() as f32 * font_size * 0.5;
+                                        words.push(Word::new(
+                                            current_word.trim().to_string(),
+                                            Rect::new(word_start_x, current_y, width, font_size),
+                                            page_num,
+                                        ));
+                                        current_x = word_start_x + width;
+                                    }
+                                    current_word.clear();
+                                    word_start_x = current_x;
+
+                                    // Advance position by the adjustment (approximate)
+                                    current_x += (adjustment / 1000.0) * font_size;
+                                } else {
+                                    // Small adjustment - just kerning, continue current word
+                                    // (don't advance position for small kerning)
                                 }
                             }
+                        }
+
+                        // Don't forget the last word if array doesn't end with space
+                        if !current_word.trim().is_empty() {
+                            let width = current_word.len() as f32 * font_size * 0.5;
+                            words.push(Word::new(
+                                current_word.trim().to_string(),
+                                Rect::new(word_start_x, current_y, width, font_size),
+                                page_num,
+                            ));
+                            current_x = word_start_x + width;
                         }
                     }
                 }
