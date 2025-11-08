@@ -26,7 +26,8 @@ fn group_words_into_lines(words: Vec<Word>) -> Vec<Vec<Word>> {
     const Y_THRESHOLD: f32 = 5.0; // Words within 5pts are on same line
 
     for word in words {
-        if (word.bounds.y - current_y).abs() < Y_THRESHOLD {
+        let word_y = word.bounds.y;
+        if (word_y - current_y).abs() < Y_THRESHOLD {
             // Same line
             current_line.push(word);
         } else {
@@ -34,8 +35,8 @@ fn group_words_into_lines(words: Vec<Word>) -> Vec<Vec<Word>> {
             if !current_line.is_empty() {
                 lines.push(current_line);
             }
-            current_line = vec![word.clone()];
-            current_y = word.bounds.y;
+            current_y = word_y;
+            current_line = vec![word];
         }
     }
 
@@ -66,7 +67,7 @@ fn merge_lines_into_paragraphs(lines: Vec<Vec<Word>>) -> Vec<Paragraph> {
         match prev_line_y {
             None => {
                 // First line
-                current_para_lines.push(line.clone());
+                current_para_lines.push(line);
                 prev_line_y = Some(line_y);
             }
             Some(prev_y) => {
@@ -79,10 +80,10 @@ fn merge_lines_into_paragraphs(lines: Vec<Vec<Word>>) -> Vec<Paragraph> {
                         paragraphs.len(),
                         current_para_lines
                     ));
-                    current_para_lines = vec![line.clone()];
+                    current_para_lines = vec![line];
                 } else {
                     // Continue current paragraph
-                    current_para_lines.push(line.clone());
+                    current_para_lines.push(line);
                 }
 
                 prev_line_y = Some(line_y);
