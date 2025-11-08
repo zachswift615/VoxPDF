@@ -1,5 +1,7 @@
-mod word;
+mod chapter;
 mod paragraph;
+mod word;
 
-pub use word::{Rect, Word};
+pub use chapter::Chapter;
 pub use paragraph::Paragraph;
+pub use word::{Rect, Word};
