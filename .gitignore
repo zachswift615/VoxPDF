@@ -51,3 +51,5 @@ temp/
 # claude workshop
 .workshop
 
+.mcp.json
+
