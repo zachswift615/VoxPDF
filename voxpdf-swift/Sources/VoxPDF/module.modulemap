@@ -1,0 +1,5 @@
+module CVoxPDF {
+    header "voxpdf.h"
+    link "voxpdf_core"
+    export *
+}

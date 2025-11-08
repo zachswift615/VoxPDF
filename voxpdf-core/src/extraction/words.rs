@@ -1,0 +1,160 @@
+use super::content_stream::decode_content_stream;
+use crate::error::{Result, VoxPDFError};
+use crate::models::{Rect, Word};
+use crate::pdf::PDFDocument;
+
+/// Extract word positions from a PDF page.
+///
+/// This is a SPIKE implementation to validate lopdf's capabilities for
+/// extracting word-level position information.
+///
+/// # Arguments
+///
+/// * `doc` - The PDF document
+/// * `page_num` - Zero-indexed page number
+///
+/// # Returns
+///
+/// A vector of words with their bounding boxes, or an error if extraction fails.
+pub fn extract_word_positions(doc: &PDFDocument, page_num: u32) -> Result<Vec<Word>> {
+    // Get the page using lopdf's API
+    let pages = doc.doc.get_pages();
+    let page_id = pages
+        .get(&(page_num + 1))
+        .ok_or_else(|| VoxPDFError::ExtractionError(format!("Page {} not found", page_num)))?;
+
+    // Get page dictionary
+    let page_obj = doc.doc.get_object(*page_id)?;
+    let page_dict = page_obj
+        .as_dict()
+        .map_err(|_| VoxPDFError::ExtractionError("Page is not a dictionary".to_string()))?;
+
+    // Get contents reference
+    let contents_ref = page_dict
+        .get(b"Contents")
+        .map_err(|_| VoxPDFError::ExtractionError("No Contents in page".to_string()))?;
+
+    // Decode the content stream manually (workaround for lopdf ASCII85+Flate bug)
+    let content_text = decode_content_stream(&doc.doc, contents_ref)?;
+
+    // Parse the content text to extract words
+    let words = parse_content_text(&content_text, page_num)?;
+
+    Ok(words)
+}
+
+/// Manually decode a PDF content stream
+///
+/// This is a workaround for lopdf 0.32's bug with ASCII85+Flate filter combinations.
+/// lopdf's get_and_decode_page_content() fails to properly decode streams with
+/// Filter: [/ASCII85Decode /FlateDecode]
+/// Parse PDF content stream text to extract words with positions.
+///
+/// Expected format from ReportLab:
+/// BT 1 0 0 1 100 592 Tm (Hello) Tj T* ET
+/// BT 1 0 0 1 160 592 Tm (World) Tj T* ET
+///
+/// Operators:
+/// - BT/ET: Begin/End text object
+/// - Tm: Set text matrix - format: a b c d e f Tm (e=x, f=y)
+/// - Tj: Show text - format: (text) Tj
+/// - Tf: Set font - format: /FontName size Tf
+fn parse_content_text(content: &str, page_num: u32) -> Result<Vec<Word>> {
+    let mut words = Vec::new();
+    let mut current_x = 0.0;
+    let mut current_y = 0.0;
+    let mut font_size = 12.0;
+
+    // Split into tokens
+    let tokens: Vec<&str> = content.split_whitespace().collect();
+    let mut i = 0;
+
+    while i < tokens.len() {
+        let token = tokens[i];
+
+        match token {
+            "Tf" => {
+                // Set font: /FontName size Tf
+                if i >= 1 {
+                    if let Ok(size) = tokens[i - 1].parse::<f32>() {
+                        font_size = size;
+                    }
+                }
+            }
+            "Tm" => {
+                // Set text matrix: a b c d e f Tm
+                // e (i-2) is x, f (i-1) is y
+                if i >= 6 {
+                    if let (Ok(x), Ok(y)) =
+                        (tokens[i - 2].parse::<f32>(), tokens[i - 1].parse::<f32>())
+                    {
+                        current_x = x;
+                        current_y = y;
+                    }
+                }
+            }
+            "Tj" => {
+                // Show text: (string) Tj
+                if i >= 1 {
+                    let text_token = tokens[i - 1];
+                    if let Some(text) = extract_pdf_string(text_token) {
+                        // Estimate width using Helvetica average character width (0.5 × font_size)
+                        //
+                        // LIMITATION: This is a rough approximation that assumes:
+                        // - Proportional font (like Helvetica, Arial, Times)
+                        // - Average character width is 50% of font height
+                        //
+                        // This will be INACCURATE for:
+                        // - Monospace fonts (Courier, Monaco) - too wide
+                        // - Condensed fonts (Arial Narrow) - too wide
+                        // - Wide fonts - too narrow
+                        //
+                        // For precise width, need to:
+                        // 1. Parse font metrics from PDF font dictionary
+                        // 2. Look up actual character widths
+                        // 3. Account for kerning adjustments
+                        //
+                        // Current approach is acceptable for v0.1.0 TTS highlighting,
+                        // where approximate bounds are sufficient.
+                        let width = text.len() as f32 * font_size * 0.5;
+
+                        words.push(Word::new(
+                            text,
+                            Rect::new(current_x, current_y, width, font_size),
+                            page_num,
+                        ));
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        i += 1;
+    }
+
+    Ok(words)
+}
+
+/// Extract text from a PDF string literal: (text) -> text
+fn extract_pdf_string(s: &str) -> Option<String> {
+    if s.starts_with('(') && s.ends_with(')') {
+        Some(s[1..s.len() - 1].to_string())
+    } else {
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_pdf_string() {
+        assert_eq!(extract_pdf_string("(Hello)"), Some("Hello".to_string()));
+        assert_eq!(
+            extract_pdf_string("(Hello World)"),
+            Some("Hello World".to_string())
+        );
+        assert_eq!(extract_pdf_string("Hello"), None);
+    }
+}
