@@ -1,9 +1,9 @@
 # VoxPDF
 
-**Open-source PDF text extraction library optimized for text-to-speech**
+**Cross-platform PDF text extraction library optimized for text-to-speech**
 
-[![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
-[![Platform](https://img.shields.io/badge/Platform-iOS%2015%2B-blue.svg)](https://developer.apple.com/ios/)
+[![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org)
+[![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android%20%7C%20Web-blue.svg)](https://github.com/yourusername/voxpdf)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -14,7 +14,7 @@ Text-to-speech changed my life. I can learn 100x faster by listening to books co
 
 **VoxPDF exists to make PDF-to-speech accessible to everyone.**
 
-This is an open-source Swift library that extracts text from PDFs with intelligent layout understanding, optimized specifically for text-to-speech applications. Built incrementally over months/years, tested rigorously against real-world PDFs, and free forever.
+This is an open-source, cross-platform library that extracts text from PDFs with intelligent layout understanding, optimized specifically for text-to-speech applications. Built with a **Rust core** and platform-specific bindings (Swift, Kotlin, WASM), following the proven architecture of commercial SDKs like Foxit and PSPDFKit. Built incrementally over months/years, tested rigorously against real-world PDFs, and free forever.
 
 ## Why VoxPDF?
 
@@ -36,38 +36,52 @@ VoxPDF provides:
 - ✅ **Word-level tracking** - Precise positions for synchronized highlighting
 - ✅ **Chapter detection** - Automatic TOC generation and navigation
 - ✅ **Free and open source** - MIT licensed, community-driven
-- ✅ **Swift-native** - Modern Swift API with async/await support
-- ✅ **Production-ready** - Comprehensive tests, performance optimized
+- ✅ **Cross-platform architecture** - Rust core + C FFI + platform bindings (Swift, Kotlin, WASM)
+- ✅ **Commercial-grade design** - Same architecture as Foxit SDK and PSPDFKit
+- ✅ **Performance** - Native Rust/C-level speed without sacrificing memory safety
+- ✅ **Platform-native APIs** - Idiomatic Swift/Kotlin bindings with modern concurrency support
 
 ## Current Status
 
 **🚧 In Active Development**
 
-- **Current Version**: Pre-alpha (v0.0.1)
-- **Target v0.1.0**: Basic text extraction better than PDFKit alone (3 weeks)
-- **Target v1.0.0**: Production-ready for technical books and papers (6 months)
+- **Current Phase**: Phase 0 (Foundation) - COMPLETE
+  - ✅ Project structure initialized
+  - ✅ Architecture documented (Rust core + FFI + bindings)
+  - ✅ Development roadmap established
+
+- **Next Step**: Slice 0 - lopdf validation spike (2-3 days)
+  - Validate word position extraction capabilities
+  - Decision point: Continue with lopdf or pivot to mupdf-sys
+
+- **Target v0.1.0**: Basic text extraction better than PDFKit alone (4-6 weeks)
+- **Target v1.0.0**: Production-ready for technical books and papers (9-12 months)
 
 See [ROADMAP.md](docs/ROADMAP.md) for detailed milestones.
 
 ## Quick Start
+
+**Note:** VoxPDF is still in early development. The API shown below represents the planned Swift bindings interface (wrapping the Rust core).
+
+### iOS/macOS (Swift)
 
 ```swift
 import VoxPDF
 
 // Load a PDF
 let url = URL(fileURLWithPath: "book.pdf")
-let extractor = PDFTextExtractor(url: url)
+let document = try PDFDocument(url: url)
 
 // Extract text optimized for TTS
-let document = try await extractor.extract()
+let content = try await document.extract()
 
 // Get chapters for navigation
-for chapter in document.chapters {
+for chapter in content.chapters {
     print("\(chapter.title) - Page \(chapter.pageNumber)")
 }
 
 // Get text to read aloud
-for paragraph in document.paragraphs {
+for paragraph in content.paragraphs {
     // Feed to AVSpeechSynthesizer or your TTS engine
     speak(paragraph.text)
 }
@@ -78,30 +92,73 @@ for word in paragraph.words {
 }
 ```
 
+### Android (Kotlin) - Coming Soon
+
+```kotlin
+// Kotlin bindings will provide similar idiomatic API
+val document = PDFDocument(file)
+val content = document.extract()
+```
+
+### Web (JavaScript) - Coming Soon
+
+```javascript
+// WASM bindings will provide JavaScript API
+const document = await VoxPDF.open("book.pdf");
+const content = await document.extract();
+```
+
+## Architecture
+
+```
+┌─────────────────────────────────────┐
+│   Platform Bindings (Swift, etc.)  │  ← Idiomatic APIs
+│   - PDFDocument wrapper             │    Memory management
+│   - Native error types              │    async/await
+├─────────────────────────────────────┤
+│         C FFI Boundary              │  ← Stable interface
+│   - Opaque pointers                 │    Cross-platform
+│   - C structs                       │    Clear ownership
+├─────────────────────────────────────┤
+│      Rust Core (voxpdf-core)        │  ← All business logic
+│   - PDF parsing (lopdf/mupdf)       │    Memory safe
+│   - Text extraction                 │    Performance
+│   - Layout analysis                 │    Portable
+└─────────────────────────────────────┘
+```
+
 ## Features
 
-### ✅ Current (v0.0.1-alpha)
-- Basic text extraction using PDFKit
-- Simple paragraph detection
-- Hyphenation handling
+### ✅ Phase 0: Foundation (COMPLETE)
+- Project structure
+- Rust workspace setup
+- Documentation (ARCHITECTURE.md, ROADMAP.md)
+- Development plan
 
-### 🚧 In Progress (v0.1.0)
+### 🚧 Next: Slice 0 (Validation Spike)
+- Validate lopdf word position extraction
+- Decision: Continue with lopdf or pivot to mupdf-sys
+
+### 🎯 v0.1.0 (4-6 weeks) - Better than PDFKit
+- Basic text extraction from PDFs
+- Word position tracking (for highlighting)
+- Paragraph detection
+- Hyphenation reassembly
+- TOC extraction from PDF metadata
+- Swift bindings + Swift Package Manager distribution
+
+### 🎯 v0.5.0 (3-4 months) - Technical Books
 - Multi-column layout detection
 - Header/footer removal
-- TOC extraction from PDF metadata
-- Word-level position tracking
-
-### 🎯 Planned (v0.5.0)
-- Intelligent reading order for complex layouts
+- Intelligent reading order
 - Chapter detection via font analysis
+
+### 🌟 v1.0.0 (9-12 months) - Production Ready
+- Complex layouts (3-column, mixed)
 - Footnote handling
 - Table detection
-
-### 🌟 Future (v1.0.0+)
-- 3-column layouts
-- Sidebars and callouts
-- Form field extraction
-- Annotation processing
+- Android (Kotlin) bindings
+- Comprehensive test suite (100+ PDFs)
 
 See [ROADMAP.md](docs/ROADMAP.md) for complete feature timeline.
 
@@ -121,12 +178,35 @@ The roadmap evolves based on GitHub issues, user-submitted problematic PDFs, and
 
 ## Installation
 
-**Coming Soon** - VoxPDF will be available via Swift Package Manager once v0.1.0 is released.
+**Coming Soon** - VoxPDF will be available once v0.1.0 is released.
+
+### Rust (Core Library)
+
+```toml
+[dependencies]
+voxpdf-core = "0.1"
+```
+
+### iOS/macOS (Swift Package Manager)
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/VoxPDF.git", from: "0.1.0")
+    .package(url: "https://github.com/yourusername/voxpdf-swift.git", from: "0.1.0")
 ]
+```
+
+### Android (Gradle)
+
+```gradle
+// Coming in v1.0
+implementation 'com.voxpdf:voxpdf-kotlin:0.1.0'
+```
+
+### Web (npm)
+
+```bash
+# Coming in v1.0+
+npm install voxpdf-wasm
 ```
 
 ## Documentation
@@ -173,14 +253,20 @@ Free to use in commercial and open-source projects.
 ## Acknowledgments
 
 Built with:
-- **PDFKit** - Apple's PDF framework for basic parsing
+- **Rust** - Memory-safe systems language enabling cross-platform performance
+- **lopdf** - Pure Rust PDF parsing library (starting point)
+- **MuPDF** - Industry-standard PDF library (fallback option)
 - **Claude Code** - AI pair programming for incremental development
 - **Community** - Test PDFs, bug reports, and feature requests from users worldwide
 
 Inspired by:
-- **Foxit SDK** - Commercial PDF SDK that proved professional TTS PDF support is possible
+- **Foxit SDK** - Commercial PDF SDK (C++ core) that proved the compiled core + FFI + bindings architecture
+- **PSPDFKit** - Commercial SDK (C++ core) demonstrating cross-platform PDF excellence
 - **Voice Dream Reader** - iOS app that showed the importance of precise word highlighting
-- **MuPDF** - Open-source PDF library demonstrating what's achievable
+- **MuPDF** - Open-source PDF library (C core) demonstrating what's achievable
+- **Listen2** - Our TTS app that sparked the need for VoxPDF
+
+We follow the same proven pattern as commercial SDKs, but use Rust instead of C++ for memory safety.
 
 ## Support
 
@@ -191,9 +277,11 @@ Inspired by:
 
 ---
 
-**Status**: 🚧 Pre-alpha - Not production-ready yet, but actively developed
+**Status**: 🚧 Phase 0 Complete - Foundation laid, validation spike next
+**Architecture**: Rust core + C FFI + platform bindings (Swift, Kotlin, WASM)
 **Maintainer**: [@zachswift](https://github.com/zachswift)
 **Started**: November 2025
-**First Release Target**: January 2026 (v0.1.0)
+**Next Milestone**: Slice 0 validation spike (2-3 days)
+**First Release Target**: February 2026 (v0.1.0)
 
 **Star ⭐ this repo if you believe TTS should be accessible to everyone!**
