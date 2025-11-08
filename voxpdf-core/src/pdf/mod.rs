@@ -1,82 +1,59 @@
-//! PDF document loading and management.
-//!
-//! This module provides the [`PDFDocument`] struct which wraps
-//! lopdf's document handling with VoxPDF's error types.
+use crate::error::{Result, VoxPDFError};
+use mupdf::Document as MuPdfDocument;
 
-use crate::error::Result;
-use lopdf::Document;
-use std::path::Path;
-
-/// A PDF document wrapper providing VoxPDF-specific operations.
-///
-/// This struct wraps lopdf's [`Document`] type and provides a simplified
-/// interface for common PDF operations like loading and querying page counts.
-///
-/// # Examples
-///
-/// ```no_run
-/// use voxpdf_core::pdf::PDFDocument;
-///
-/// let doc = PDFDocument::open("example.pdf")?;
-/// println!("Document has {} pages", doc.page_count());
-/// # Ok::<(), voxpdf_core::error::VoxPDFError>(())
-/// ```
+/// Wrapper around MuPDF document
 pub struct PDFDocument {
-    /// The underlying lopdf Document.
-    ///
-    /// Exposed publicly to allow direct access to lopdf functionality
-    /// when needed.
-    pub doc: Document,
+    pub(crate) doc: MuPdfDocument,
+    path: String,
 }
 
 impl PDFDocument {
-    /// Opens a PDF document from a file path.
+    /// Open a PDF file from disk
     ///
-    /// # Arguments
-    ///
-    /// * `path` - Path to the PDF file to open
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(PDFDocument)` if the file was successfully loaded,
-    /// or `Err(VoxPDFError)` if the file could not be opened or parsed.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use voxpdf_core::pdf::PDFDocument;
+    /// # Example
+    /// ```
+    /// use voxpdf_core::PDFDocument;
     ///
     /// let doc = PDFDocument::open("example.pdf")?;
-    /// # Ok::<(), voxpdf_core::error::VoxPDFError>(())
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    pub fn open(path: impl AsRef<Path>) -> Result<Self> {
-        let path = path.as_ref();
-        let doc = Document::load(path)?;
-        Ok(Self { doc })
+    pub fn open(path: &str) -> Result<Self> {
+        let doc = MuPdfDocument::open(path)
+            .map_err(|e| VoxPDFError::InvalidPDF(format!("Failed to open PDF: {}", e)))?;
+
+        Ok(PDFDocument {
+            doc,
+            path: path.to_string(),
+        })
     }
 
-    /// Returns the number of pages in the document.
+    /// Get the number of pages in the document
     ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use voxpdf_core::pdf::PDFDocument;
+    /// # Example
+    /// ```
+    /// use voxpdf_core::PDFDocument;
     ///
     /// let doc = PDFDocument::open("example.pdf")?;
     /// let count = doc.page_count();
-    /// println!("Document has {} pages", count);
-    /// # Ok::<(), voxpdf_core::error::VoxPDFError>(())
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    pub fn page_count(&self) -> usize {
-        self.doc.get_pages().len()
+    pub fn page_count(&self) -> u32 {
+        self.doc.page_count().unwrap_or(0) as u32
+    }
+
+    /// Get the file path of this document
+    pub fn path(&self) -> &str {
+        &self.path
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn test_page_count() {
-        // Unit test for page_count logic
-        // Integration tests are in tests/
+        let doc = PDFDocument::open("tests/fixtures/simple.pdf").unwrap();
+        assert_eq!(doc.page_count(), 1);
     }
 }
