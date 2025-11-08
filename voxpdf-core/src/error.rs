@@ -8,7 +8,7 @@ use thiserror::Error;
 
 /// Error type for all VoxPDF operations.
 ///
-/// This enum wraps underlying errors from lopdf and I/O operations,
+/// This enum wraps underlying errors from mupdf and I/O operations,
 /// providing consistent error handling across the VoxPDF library.
 #[derive(Debug, Error)]
 pub enum VoxPDFError {
