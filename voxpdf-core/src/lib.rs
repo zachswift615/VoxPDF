@@ -1,3 +1,7 @@
+pub mod models;
+
+pub use models::{Word, Rect};
+
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
 }
