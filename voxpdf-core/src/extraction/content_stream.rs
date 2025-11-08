@@ -10,7 +10,7 @@ use std::io::Read;
 /// decode ASCII85 first, then apply Flate decompression.
 ///
 /// Falls back to lopdf's native decompression for other filter types.
-pub(crate) fn decode_content_stream(doc: &lopdf::Document, contents: &Object) -> Result<String> {
+pub fn decode_content_stream(doc: &lopdf::Document, contents: &Object) -> Result<String> {
     match contents {
         Object::Reference(ref_id) => {
             let stream_obj = doc.get_object(*ref_id)?;

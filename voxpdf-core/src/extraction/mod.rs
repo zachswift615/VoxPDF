@@ -1,4 +1,4 @@
-mod content_stream;
+pub mod content_stream;
 pub mod paragraphs;
 pub mod text;
 pub mod words;
