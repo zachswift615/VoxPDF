@@ -1,5 +1,6 @@
 pub mod error;
 pub mod extraction;
+pub mod ffi;
 pub mod models;
 pub mod pdf;
 
