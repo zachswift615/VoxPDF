@@ -43,10 +43,9 @@ proptest = "1.4"   # Property-based testing
 default = []
 # mupdf = ["mupdf-sys"]  # Alternative PDF backend (future)
 
-# Benchmarks will be added during implementation
-# [[bench]]
-# name = "extraction"
-# harness = false
+[[bench]]
+name = "word_extraction_bench"
+harness = false
 
 [profile.release]
 opt-level = 3
