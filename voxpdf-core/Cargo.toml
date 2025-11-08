@@ -19,6 +19,7 @@ lopdf = "0.32"
 
 # Text processing
 unicode-segmentation = "1.11"  # Word/grapheme boundaries
+regex = "1.10"  # Pattern matching for hyphenation
 
 # Error handling
 thiserror = "1.0"
