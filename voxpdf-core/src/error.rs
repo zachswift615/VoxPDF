@@ -30,12 +30,6 @@ pub enum VoxPDFError {
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 
-    /// Error from the underlying lopdf library.
-    ///
-    /// Automatically converted from `lopdf::Error`.
-    #[error("lopdf error: {0}")]
-    Lopdf(#[from] lopdf::Error),
-
     /// Error occurred during text extraction.
     ///
     /// This includes parsing errors, unsupported PDF features, etc.
