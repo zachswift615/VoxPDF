@@ -11,6 +11,7 @@ typedef enum {
     CVoxPDFErrorPageNotFound = 2,
     CVoxPDFErrorIoError = 3,
     CVoxPDFErrorOutOfMemory = 4,
+    CVoxPDFErrorInvalidText = 5,
 } CVoxPDFError;
 
 // Opaque pointer to document
