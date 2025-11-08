@@ -15,8 +15,14 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "VoxPDF",
+            name: "CVoxPDF",
             dependencies: [],
+            path: "Sources/CVoxPDF",
+            publicHeadersPath: "."
+        ),
+        .target(
+            name: "VoxPDF",
+            dependencies: ["CVoxPDF"],
             path: "Sources/VoxPDF"
         ),
         .testTarget(
