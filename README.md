@@ -10,7 +10,7 @@
 
 ## Mission
 
-Text-to-speech changed my life. I can learn 100x faster by listening to books constantly while commuting, exercising, and doing chores. But PDF support in TTS apps is either non-existent or locked behind expensive commercial SDKs costing thousands of dollars.
+Text-to-speech changed my life. I've learned so much in the past 10 years by listening to books constantly while commuting, exercising, and doing chores. But PDF support in TTS apps is either non-existent or locked behind expensive commercial SDKs costing thousands of dollars.
 
 **VoxPDF exists to make PDF-to-speech accessible to everyone.**
 
