@@ -11,7 +11,7 @@ impl PDFDocument {
     /// Open a PDF file from disk
     ///
     /// # Example
-    /// ```
+    /// ```no_run
     /// use voxpdf_core::PDFDocument;
     ///
     /// let doc = PDFDocument::open("example.pdf")?;
@@ -30,7 +30,7 @@ impl PDFDocument {
     /// Get the number of pages in the document
     ///
     /// # Example
-    /// ```
+    /// ```no_run
     /// use voxpdf_core::PDFDocument;
     ///
     /// let doc = PDFDocument::open("example.pdf")?;

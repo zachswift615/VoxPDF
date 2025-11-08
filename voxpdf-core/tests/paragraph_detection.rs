@@ -1,4 +1,4 @@
-use voxpdf_core::{PDFDocument, Paragraph};
+use voxpdf_core::PDFDocument;
 use voxpdf_core::extraction::{extract_word_positions, detect_paragraphs};
 
 #[test]
