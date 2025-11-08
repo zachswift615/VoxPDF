@@ -10,8 +10,6 @@ pub fn extract_toc(_doc: &PDFDocument) -> Result<Vec<Chapter>> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_toc_extraction_unit() {
         // Unit tests for outline parsing logic

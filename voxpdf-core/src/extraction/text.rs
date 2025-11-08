@@ -30,8 +30,6 @@ pub fn extract_page_text(doc: &PDFDocument, page_num: u32) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_text_extraction_unit() {
         // Integration tests in tests/text_extraction.rs provide coverage

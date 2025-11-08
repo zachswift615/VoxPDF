@@ -1,5 +1,5 @@
 use voxpdf_core::extraction::extract_word_positions;
-use voxpdf_core::{PDFDocument, Word};
+use voxpdf_core::PDFDocument;
 
 #[test]
 fn spike_validates_word_positions() {
@@ -17,10 +17,10 @@ fn spike_validates_word_positions() {
         .find(|w| w.text == "World")
         .expect("Should find 'World'");
 
-    // Validate positions within 10% error
-    // Expected positions from simple-positions.json:
-    // Hello: x=100.0, y=592.0, width=27.3, height=12.0
-    // World: x=160.0, y=592.0, width=31.3, height=12.0
+    // Validate positions within reasonable tolerance
+    // Actual positions from simple.pdf (MuPDF coordinate system):
+    // Hello: x=100.0, y=200.0, width=27.86, height=12.0
+    // World: x=160.0, y=200.0, width=31.32, height=12.0
 
     assert!(
         (hello.bounds.x - 100.0).abs() < 10.0,
@@ -28,8 +28,8 @@ fn spike_validates_word_positions() {
         hello.bounds.x
     );
     assert!(
-        (hello.bounds.y - 592.0).abs() < 59.2,
-        "Hello Y position: expected ~592, got {}",
+        (hello.bounds.y - 200.0).abs() < 20.0,
+        "Hello Y position: expected ~200, got {}",
         hello.bounds.y
     );
 
@@ -39,8 +39,8 @@ fn spike_validates_word_positions() {
         world.bounds.x
     );
     assert!(
-        (world.bounds.y - 592.0).abs() < 59.2,
-        "World Y position: expected ~592, got {}",
+        (world.bounds.y - 200.0).abs() < 20.0,
+        "World Y position: expected ~200, got {}",
         world.bounds.y
     );
 

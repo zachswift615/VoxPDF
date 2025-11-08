@@ -49,13 +49,16 @@ pub fn extract_word_positions(doc: &PDFDocument, page_num: u32) -> Result<Vec<Wo
 
                 let origin = text_char.origin();
                 let size = text_char.size();
+                let quad = text_char.quad();
                 let x = origin.x;
                 let y = origin.y;
+                let char_width = quad.ur.x - quad.ul.x;
 
                 // Check if this character starts a new word
                 let is_space = c.is_whitespace();
                 let is_new_word = if let Some(prev) = prev_x {
-                    (x - prev) > WORD_SPACING_THRESHOLD || is_space
+                    let gap = x - prev;
+                    gap > WORD_SPACING_THRESHOLD || is_space
                 } else {
                     false
                 };
@@ -84,7 +87,8 @@ pub fn extract_word_positions(doc: &PDFDocument, page_num: u32) -> Result<Vec<Wo
                     word_chars.push((c, x, y, size));
                 }
 
-                prev_x = Some(x + size * 0.6); // Approximate character width
+                // Use actual character width from quad instead of approximation
+                prev_x = Some(x + char_width);
             }
 
             // Finish word at end of line
@@ -99,7 +103,7 @@ pub fn extract_word_positions(doc: &PDFDocument, page_num: u32) -> Result<Vec<Wo
                 word_chars.clear();
             }
 
-            prev_x = None; // Reset for next line
+            // prev_x is reset implicitly at the start of next line
         }
     }
 
@@ -130,8 +134,6 @@ fn create_word_from_chars(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_parse_operations() {
         // Integration tests in tests/word_positions.rs provide coverage
