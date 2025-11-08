@@ -1,12 +1,11 @@
-use super::content_stream::decode_content_stream;
 use crate::error::{Result, VoxPDFError};
 use crate::models::{Rect, Word};
 use crate::pdf::PDFDocument;
+use mupdf::TextPageOptions;
 
-/// Extract word positions from a PDF page.
+/// Extract word positions from a PDF page using MuPDF.
 ///
-/// This is a SPIKE implementation to validate lopdf's capabilities for
-/// extracting word-level position information.
+/// Groups consecutive TextChar objects into words based on spacing.
 ///
 /// # Arguments
 ///
@@ -15,146 +14,128 @@ use crate::pdf::PDFDocument;
 ///
 /// # Returns
 ///
-/// A vector of words with their bounding boxes, or an error if extraction fails.
+/// A vector of words with their bounding boxes.
 pub fn extract_word_positions(doc: &PDFDocument, page_num: u32) -> Result<Vec<Word>> {
-    // Get the page using lopdf's API
-    let pages = doc.doc.get_pages();
-    let page_id = pages
-        .get(&(page_num + 1))
-        .ok_or_else(|| VoxPDFError::ExtractionError(format!("Page {} not found", page_num)))?;
+    // Get the page
+    let page = doc.doc.load_page(page_num as i32)
+        .map_err(|e| VoxPDFError::ExtractionError(format!("Failed to load page {}: {}", page_num, e)))?;
 
-    // Get page dictionary
-    let page_obj = doc.doc.get_object(*page_id)?;
-    let page_dict = page_obj
-        .as_dict()
-        .map_err(|_| VoxPDFError::ExtractionError("Page is not a dictionary".to_string()))?;
+    // Convert to text page
+    let text_page = page.to_text_page(TextPageOptions::empty())
+        .map_err(|e| VoxPDFError::ExtractionError(format!("Failed to extract text: {}", e)))?;
 
-    // Get contents reference
-    let contents_ref = page_dict
-        .get(b"Contents")
-        .map_err(|_| VoxPDFError::ExtractionError("No Contents in page".to_string()))?;
-
-    // Decode the content stream manually (workaround for lopdf ASCII85+Flate bug)
-    let content_text = decode_content_stream(&doc.doc, contents_ref)?;
-
-    // Parse the content text to extract words
-    let words = parse_content_text(&content_text, page_num)?;
-
-    Ok(words)
-}
-
-/// Manually decode a PDF content stream
-///
-/// This is a workaround for lopdf 0.32's bug with ASCII85+Flate filter combinations.
-/// lopdf's get_and_decode_page_content() fails to properly decode streams with
-/// Filter: [/ASCII85Decode /FlateDecode]
-/// Parse PDF content stream text to extract words with positions.
-///
-/// Expected format from ReportLab:
-/// BT 1 0 0 1 100 592 Tm (Hello) Tj T* ET
-/// BT 1 0 0 1 160 592 Tm (World) Tj T* ET
-///
-/// Operators:
-/// - BT/ET: Begin/End text object
-/// - Tm: Set text matrix - format: a b c d e f Tm (e=x, f=y)
-/// - Tj: Show text - format: (text) Tj
-/// - Tf: Set font - format: /FontName size Tf
-fn parse_content_text(content: &str, page_num: u32) -> Result<Vec<Word>> {
+    // Extract characters and group into words
     let mut words = Vec::new();
-    let mut current_x = 0.0;
-    let mut current_y = 0.0;
-    let mut font_size = 12.0;
+    let mut current_word = String::new();
+    let mut word_chars: Vec<(char, f32, f32, f32)> = Vec::new(); // (char, x, y, size)
 
-    // Split into tokens
-    let tokens: Vec<&str> = content.split_whitespace().collect();
-    let mut i = 0;
+    // Word spacing threshold: characters farther apart than this start a new word
+    const WORD_SPACING_THRESHOLD: f32 = 3.0;
 
-    while i < tokens.len() {
-        let token = tokens[i];
+    for block in text_page.blocks() {
+        for line in block.lines() {
+            let mut prev_x: Option<f32> = None;
 
-        match token {
-            "Tf" => {
-                // Set font: /FontName size Tf
-                if i >= 1 {
-                    if let Ok(size) = tokens[i - 1].parse::<f32>() {
-                        font_size = size;
-                    }
+            for text_char in line.chars() {
+                let c = match text_char.char() {
+                    Some(c) => c,
+                    None => continue,
+                };
+
+                // Skip control characters and excessive whitespace
+                if c.is_control() {
+                    continue;
                 }
-            }
-            "Tm" => {
-                // Set text matrix: a b c d e f Tm
-                // e (i-2) is x, f (i-1) is y
-                if i >= 6 {
-                    if let (Ok(x), Ok(y)) =
-                        (tokens[i - 2].parse::<f32>(), tokens[i - 1].parse::<f32>())
-                    {
-                        current_x = x;
-                        current_y = y;
-                    }
-                }
-            }
-            "Tj" => {
-                // Show text: (string) Tj
-                if i >= 1 {
-                    let text_token = tokens[i - 1];
-                    if let Some(text) = extract_pdf_string(text_token) {
-                        // Estimate width using Helvetica average character width (0.5 × font_size)
-                        //
-                        // LIMITATION: This is a rough approximation that assumes:
-                        // - Proportional font (like Helvetica, Arial, Times)
-                        // - Average character width is 50% of font height
-                        //
-                        // This will be INACCURATE for:
-                        // - Monospace fonts (Courier, Monaco) - too wide
-                        // - Condensed fonts (Arial Narrow) - too wide
-                        // - Wide fonts - too narrow
-                        //
-                        // For precise width, need to:
-                        // 1. Parse font metrics from PDF font dictionary
-                        // 2. Look up actual character widths
-                        // 3. Account for kerning adjustments
-                        //
-                        // Current approach is acceptable for v0.1.0 TTS highlighting,
-                        // where approximate bounds are sufficient.
-                        let width = text.len() as f32 * font_size * 0.5;
 
-                        words.push(Word::new(
-                            text,
-                            Rect::new(current_x, current_y, width, font_size),
+                let origin = text_char.origin();
+                let size = text_char.size();
+                let quad = text_char.quad();
+                let x = origin.x;
+                let y = origin.y;
+                let char_width = quad.ur.x - quad.ul.x;
+
+                // Check if this character starts a new word
+                let is_space = c.is_whitespace();
+                let is_new_word = if let Some(prev) = prev_x {
+                    let gap = x - prev;
+                    gap > WORD_SPACING_THRESHOLD || is_space
+                } else {
+                    false
+                };
+
+                if is_new_word || is_space {
+                    // Finish current word
+                    if !current_word.trim().is_empty() {
+                        let word = create_word_from_chars(
+                            current_word.trim().to_string(),
+                            &word_chars,
                             page_num,
-                        ));
+                        );
+                        words.push(word);
                     }
-                }
-            }
-            _ => {}
-        }
+                    current_word.clear();
+                    word_chars.clear();
 
-        i += 1;
+                    // If this is not just whitespace, start new word with this char
+                    if !is_space {
+                        current_word.push(c);
+                        word_chars.push((c, x, y, size));
+                    }
+                } else {
+                    // Continue current word
+                    current_word.push(c);
+                    word_chars.push((c, x, y, size));
+                }
+
+                // Use actual character width from quad instead of approximation
+                prev_x = Some(x + char_width);
+            }
+
+            // Finish word at end of line
+            if !current_word.trim().is_empty() {
+                let word = create_word_from_chars(
+                    current_word.trim().to_string(),
+                    &word_chars,
+                    page_num,
+                );
+                words.push(word);
+                current_word.clear();
+                word_chars.clear();
+            }
+
+            // prev_x is reset implicitly at the start of next line
+        }
     }
 
     Ok(words)
 }
 
-/// Extract text from a PDF string literal: (text) -> text
-fn extract_pdf_string(s: &str) -> Option<String> {
-    if s.starts_with('(') && s.ends_with(')') {
-        Some(s[1..s.len() - 1].to_string())
-    } else {
-        None
+/// Create a Word from a collection of characters
+fn create_word_from_chars(
+    text: String,
+    chars: &[(char, f32, f32, f32)],
+    page_num: u32,
+) -> Word {
+    if chars.is_empty() {
+        return Word::new(text, Rect::new(0.0, 0.0, 0.0, 0.0), page_num);
     }
+
+    // Calculate bounding box
+    let min_x = chars.iter().map(|(_, x, _, _)| *x).fold(f32::INFINITY, f32::min);
+    let min_y = chars.iter().map(|(_, _, y, _)| *y).fold(f32::INFINITY, f32::min);
+    let max_x = chars.iter().map(|(_, x, _, s)| x + s * 0.6).fold(f32::NEG_INFINITY, f32::max);
+    let max_y = chars.iter().map(|(_, _, y, s)| y + s).fold(f32::NEG_INFINITY, f32::max);
+
+    let width = max_x - min_x;
+    let height = max_y - min_y;
+
+    Word::new(text, Rect::new(min_x, min_y, width, height), page_num)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
-    fn test_extract_pdf_string() {
-        assert_eq!(extract_pdf_string("(Hello)"), Some("Hello".to_string()));
-        assert_eq!(
-            extract_pdf_string("(Hello World)"),
-            Some("Hello World".to_string())
-        );
-        assert_eq!(extract_pdf_string("Hello"), None);
+    fn test_parse_operations() {
+        // Integration tests in tests/word_positions.rs provide coverage
     }
 }

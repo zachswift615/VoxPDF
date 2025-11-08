@@ -21,7 +21,6 @@ impl From<VoxPDFError> for CVoxPDFError {
             VoxPDFError::InvalidPDF(_) => CVoxPDFError::InvalidPDF,
             VoxPDFError::PageNotFound(_, _) => CVoxPDFError::PageNotFound,
             VoxPDFError::Io(_) => CVoxPDFError::IoError,
-            VoxPDFError::Lopdf(_) => CVoxPDFError::InvalidPDF,
             VoxPDFError::ExtractionError(_) => CVoxPDFError::InvalidPDF,
         }
     }
@@ -93,7 +92,7 @@ pub unsafe extern "C" fn voxpdf_get_page_count(doc: *const CVoxPDFDocument) -> u
     }
 
     let doc = &*(doc as *const PDFDocument);
-    doc.page_count()
+    doc.page_count() as usize
 }
 
 /// Free a PDF document, releasing all associated resources.

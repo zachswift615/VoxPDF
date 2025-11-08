@@ -8,7 +8,7 @@ use thiserror::Error;
 
 /// Error type for all VoxPDF operations.
 ///
-/// This enum wraps underlying errors from lopdf and I/O operations,
+/// This enum wraps underlying errors from mupdf and I/O operations,
 /// providing consistent error handling across the VoxPDF library.
 #[derive(Debug, Error)]
 pub enum VoxPDFError {
@@ -29,12 +29,6 @@ pub enum VoxPDFError {
     /// Automatically converted from `std::io::Error`.
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-
-    /// Error from the underlying lopdf library.
-    ///
-    /// Automatically converted from `lopdf::Error`.
-    #[error("lopdf error: {0}")]
-    Lopdf(#[from] lopdf::Error),
 
     /// Error occurred during text extraction.
     ///
