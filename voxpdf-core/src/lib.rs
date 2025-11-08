@@ -5,5 +5,5 @@ pub mod models;
 pub mod pdf;
 
 pub use error::{Result, VoxPDFError};
-pub use models::{Rect, Word};
+pub use models::{Paragraph, Rect, Word};
 pub use pdf::PDFDocument;
