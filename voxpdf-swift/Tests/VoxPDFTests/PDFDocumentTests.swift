@@ -61,4 +61,26 @@ final class PDFDocumentTests: XCTestCase {
         XCTAssertNotNil(hello)
         XCTAssertNotNil(world)
     }
+
+    func testParagraphs() throws {
+        let url = Bundle.module.url(
+            forResource: "simple",
+            withExtension: "pdf",
+            subdirectory: "TestPDFs"
+        )!
+
+        let doc = try PDFDocument(url: url)
+        let paragraphs = try doc.paragraphs(page: 0)
+
+        XCTAssertGreaterThan(paragraphs.count, 0)
+
+        // All paragraphs should have valid data
+        for para in paragraphs {
+            XCTAssertFalse(para.text.isEmpty)
+            XCTAssertGreaterThan(para.wordCount, 0)
+        }
+
+        // First paragraph should contain text
+        XCTAssertTrue(paragraphs[0].text.contains("Hello"))
+    }
 }

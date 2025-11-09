@@ -92,4 +92,52 @@ public class PDFDocument {
 
         return words
     }
+
+    /// Extracts paragraphs from a specific page.
+    ///
+    /// - Parameter page: The zero-indexed page number
+    /// - Returns: Array of paragraphs with their text
+    /// - Throws: `VoxPDFError` if extraction fails
+    public func paragraphs(page: Int) throws -> [Paragraph] {
+        var error: CVoxPDFError = CVoxPDFErrorOk
+
+        let count = voxpdf_get_paragraph_count(handle, UInt32(page), &error)
+        guard error.rawValue == 0 else {
+            if error.rawValue == 2 {
+                throw VoxPDFError.pageNotFound(page: page, totalPages: self.pageCount)
+            }
+            throw VoxPDFError(code: Int32(error.rawValue), context: "page \(page)")
+        }
+
+        var paragraphs: [Paragraph] = []
+        paragraphs.reserveCapacity(count)
+
+        for index in 0..<count {
+            var cPara = CParagraph(index: 0, page_number: 0, word_count: 0)
+            var textPtr: UnsafePointer<CChar>?
+
+            let result = voxpdf_get_paragraph(
+                handle,
+                UInt32(page),
+                index,
+                &cPara,
+                &textPtr,
+                &error
+            )
+
+            guard result, error.rawValue == 0, let ptr = textPtr else {
+                if error.rawValue == 2 {
+                    throw VoxPDFError.pageNotFound(page: page, totalPages: self.pageCount)
+                }
+                throw VoxPDFError(code: Int32(error.rawValue), context: "page \(page), paragraph \(index)")
+            }
+
+            let text = String(cString: ptr)
+            voxpdf_free_string(UnsafeMutablePointer(mutating: ptr))
+
+            paragraphs.append(Paragraph(text: text, cParagraph: cPara))
+        }
+
+        return paragraphs
+    }
 }
