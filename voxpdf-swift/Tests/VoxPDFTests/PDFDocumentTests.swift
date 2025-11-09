@@ -3,9 +3,11 @@ import XCTest
 
 final class PDFDocumentTests: XCTestCase {
     func testOpenSimplePDF() throws {
-        // Copy test PDF from Rust fixtures
-        let testPDFPath = "../../voxpdf-core/tests/fixtures/simple.pdf"
-        let url = URL(fileURLWithPath: testPDFPath)
+        let url = Bundle.module.url(
+            forResource: "simple",
+            withExtension: "pdf",
+            subdirectory: "TestPDFs"
+        )!
 
         let doc = try PDFDocument(url: url)
         XCTAssertEqual(doc.pageCount, 1)
@@ -20,8 +22,11 @@ final class PDFDocumentTests: XCTestCase {
     }
 
     func testExtractText() throws {
-        let testPDFPath = "../../voxpdf-core/tests/fixtures/simple.pdf"
-        let url = URL(fileURLWithPath: testPDFPath)
+        let url = Bundle.module.url(
+            forResource: "simple",
+            withExtension: "pdf",
+            subdirectory: "TestPDFs"
+        )!
 
         let doc = try PDFDocument(url: url)
         let text = try doc.text(page: 0)
@@ -31,8 +36,11 @@ final class PDFDocumentTests: XCTestCase {
     }
 
     func testWordPositions() throws {
-        let testPDFPath = "../../voxpdf-core/tests/fixtures/simple.pdf"
-        let url = URL(fileURLWithPath: testPDFPath)
+        let url = Bundle.module.url(
+            forResource: "simple",
+            withExtension: "pdf",
+            subdirectory: "TestPDFs"
+        )!
 
         let doc = try PDFDocument(url: url)
         let words = try doc.wordPositions(page: 0)
