@@ -2,17 +2,33 @@ use voxpdf_core::PDFDocument;
 use voxpdf_core::extraction::extract_toc;
 
 #[test]
-#[ignore] // AI Agents book PDF has corrupted outline structure
-fn test_extract_toc_ai_agents_book() {
-    // Note: This PDF reports "Outline last pointer still bad or missing despite repair"
-    // from mupdf, indicating the outline structure is corrupted. The PDF may have
-    // bookmarks visible in some viewers, but mupdf cannot parse them.
+#[cfg(feature = "toc-fallback")]
+fn test_extract_toc_ai_agents_book_with_fallback() {
+    // This PDF has a corrupted outline that mupdf rejects (error code 7),
+    // but lopdf can parse it successfully. Tests multi-parser fallback.
     let doc = PDFDocument::open("tests/fixtures/ai-agents-book.pdf").unwrap();
     let chapters = extract_toc(&doc).unwrap();
 
-    // Due to corrupted outline, this returns empty
-    // If the PDF outline were valid, we would expect chapters here
-    assert_eq!(chapters.len(), 0, "Corrupted outline should return empty TOC");
+    // With lopdf fallback, we successfully extract the TOC
+    assert!(!chapters.is_empty(), "Should extract TOC via lopdf fallback");
+    assert!(chapters.len() > 200, "Book should have substantial TOC (238 entries)");
+
+    // Verify hierarchy
+    let top_level: Vec<_> = chapters.iter().filter(|c| c.level == 0).collect();
+    assert!(top_level.len() >= 15, "Should have multiple top-level chapters");
+
+    // Verify first chapter
+    assert!(chapters[0].title.contains("Copyright") || chapters[0].title.contains("Table"),
+        "First entry should be Copyright or TOC");
+}
+
+#[test]
+#[cfg(not(feature = "toc-fallback"))]
+fn test_extract_toc_ai_agents_book_no_fallback() {
+    // Without fallback feature, corrupted outlines return empty
+    let doc = PDFDocument::open("tests/fixtures/ai-agents-book.pdf").unwrap();
+    let chapters = extract_toc(&doc).unwrap();
+    assert_eq!(chapters.len(), 0, "Without fallback, corrupted outline returns empty");
 }
 
 #[test]

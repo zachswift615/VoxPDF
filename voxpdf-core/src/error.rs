@@ -41,3 +41,11 @@ pub enum VoxPDFError {
 ///
 /// This is the standard Result type used throughout VoxPDF.
 pub type Result<T> = std::result::Result<T, VoxPDFError>;
+
+/// Convert lopdf errors to VoxPDFError (only when toc-fallback feature is enabled)
+#[cfg(feature = "toc-fallback")]
+impl From<lopdf::Error> for VoxPDFError {
+    fn from(err: lopdf::Error) -> Self {
+        VoxPDFError::ExtractionError(format!("lopdf error: {}", err))
+    }
+}

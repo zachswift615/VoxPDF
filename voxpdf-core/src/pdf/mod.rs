@@ -45,6 +45,12 @@ impl PDFDocument {
     pub fn path(&self) -> &str {
         &self.path
     }
+
+    /// Try to load outlines and return detailed error info for debugging
+    #[doc(hidden)]
+    pub fn _debug_outlines(&self) -> std::result::Result<Vec<mupdf::Outline>, mupdf::Error> {
+        self.doc.outlines()
+    }
 }
 
 #[cfg(test)]

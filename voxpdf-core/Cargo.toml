@@ -17,6 +17,9 @@ crate-type = ["lib", "cdylib", "staticlib"]  # Support Rust API + FFI
 # PDF parsing - using MuPDF for production-grade font handling
 mupdf = "0.5.0"
 
+# Fallback PDF parser for corrupted outline structures
+lopdf = { version = "0.33", optional = true }
+
 # Text processing
 unicode-segmentation = "1.11"  # Word/grapheme boundaries
 regex = "1.10"  # Pattern matching for hyphenation
@@ -37,7 +40,8 @@ criterion = "0.5"  # Benchmarking
 proptest = "1.4"   # Property-based testing
 
 [features]
-default = []
+default = ["toc-fallback"]
+toc-fallback = ["lopdf"]  # Enable lopdf fallback for corrupted TOC structures
 
 [[bench]]
 name = "word_extraction_bench"

@@ -2,7 +2,12 @@ use voxpdf_core::PDFDocument;
 use voxpdf_core::extraction::extract_toc;
 
 fn main() {
-    let path = "tests/fixtures/ai-agents-book.pdf";
+    let args: Vec<String> = std::env::args().collect();
+    let path = if args.len() > 1 {
+        &args[1]
+    } else {
+        "tests/fixtures/ai-agents-book.pdf"
+    };
     println!("Opening PDF: {}", path);
 
     let doc = PDFDocument::open(path).expect("Failed to open PDF");
