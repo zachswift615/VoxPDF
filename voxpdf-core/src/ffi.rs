@@ -43,6 +43,15 @@ pub struct CWordPosition {
     pub page: u32,
 }
 
+/// C-compatible paragraph structure.
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct CParagraph {
+    pub index: usize,
+    pub page_number: u32,
+    pub word_count: usize,
+}
+
 /// Open a PDF document from a file path.
 ///
 /// # Safety
@@ -254,6 +263,99 @@ pub unsafe extern "C" fn voxpdf_get_word(
     }
 }
 
+/// Get the number of paragraphs on a page.
+///
+/// # Safety
+///
+/// - `doc` must be a valid pointer returned from `voxpdf_open`
+/// - `doc` must not have been freed with `voxpdf_free_document`
+/// - `error_out` must be a valid mutable pointer to CVoxPDFError
+#[no_mangle]
+pub unsafe extern "C" fn voxpdf_get_paragraph_count(
+    doc: *const CVoxPDFDocument,
+    page: u32,
+    error_out: *mut CVoxPDFError,
+) -> usize {
+    if doc.is_null() || error_out.is_null() {
+        return 0;
+    }
+
+    let doc = &*(doc as *const PDFDocument);
+
+    // Extract words and detect paragraphs
+    match crate::extraction::extract_word_positions(doc, page) {
+        Ok(words) => {
+            let paragraphs = crate::extraction::detect_paragraphs(words);
+            *error_out = CVoxPDFError::Ok;
+            paragraphs.len()
+        }
+        Err(e) => {
+            *error_out = e.into();
+            0
+        }
+    }
+}
+
+/// Get a specific paragraph by index from a page.
+///
+/// # Safety
+///
+/// - `doc` must be a valid pointer returned from `voxpdf_open`
+/// - `doc` must not have been freed with `voxpdf_free_document`
+/// - `para_out` must be a valid mutable pointer to CParagraph
+/// - `text_out` must be a valid mutable pointer
+/// - `error_out` must be a valid mutable pointer to CVoxPDFError
+/// - Caller must eventually call `voxpdf_free_string` on the returned text pointer
+#[no_mangle]
+pub unsafe extern "C" fn voxpdf_get_paragraph(
+    doc: *const CVoxPDFDocument,
+    page: u32,
+    index: usize,
+    para_out: *mut CParagraph,
+    text_out: *mut *const c_char,
+    error_out: *mut CVoxPDFError,
+) -> bool {
+    if doc.is_null() || para_out.is_null() || text_out.is_null() || error_out.is_null() {
+        return false;
+    }
+
+    let doc = &*(doc as *const PDFDocument);
+
+    // Extract words and detect paragraphs
+    match crate::extraction::extract_word_positions(doc, page) {
+        Ok(words) => {
+            let paragraphs = crate::extraction::detect_paragraphs(words);
+
+            if let Some(para) = paragraphs.get(index) {
+                *para_out = CParagraph {
+                    index: para.index,
+                    page_number: para.page_number,
+                    word_count: para.word_count(),
+                };
+
+                match CString::new(para.text.clone()) {
+                    Ok(c_str) => {
+                        *text_out = c_str.into_raw();
+                        *error_out = CVoxPDFError::Ok;
+                        return true;
+                    }
+                    Err(_) => {
+                        *error_out = CVoxPDFError::InvalidText;
+                        return false;
+                    }
+                }
+            }
+
+            *error_out = CVoxPDFError::PageNotFound;
+            false
+        }
+        Err(e) => {
+            *error_out = e.into();
+            false
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -325,6 +427,36 @@ mod tests {
             let result = voxpdf_get_word(doc, 0, 0, &mut word_pos, &mut text_ptr, &mut error);
             assert!(result);
             assert!(word_pos.width > 0.0);
+            assert!(!text_ptr.is_null());
+
+            voxpdf_free_string(text_ptr as *mut c_char);
+            voxpdf_free_document(doc);
+        }
+    }
+
+    #[test]
+    fn test_ffi_paragraphs() {
+        let path = CString::new("tests/fixtures/simple.pdf").unwrap();
+        let mut error = CVoxPDFError::Ok;
+
+        unsafe {
+            let doc = voxpdf_open(path.as_ptr(), &mut error);
+            assert!(!doc.is_null());
+
+            let count = voxpdf_get_paragraph_count(doc, 0, &mut error);
+            assert!(count > 0);
+            assert_eq!(error, CVoxPDFError::Ok);
+
+            let mut para = CParagraph {
+                index: 0,
+                page_number: 0,
+                word_count: 0,
+            };
+            let mut text_ptr: *const c_char = std::ptr::null();
+
+            let result = voxpdf_get_paragraph(doc, 0, 0, &mut para, &mut text_ptr, &mut error);
+            assert!(result);
+            assert!(para.word_count > 0);
             assert!(!text_ptr.is_null());
 
             voxpdf_free_string(text_ptr as *mut c_char);
