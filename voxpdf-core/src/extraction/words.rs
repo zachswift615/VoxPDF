@@ -17,11 +17,13 @@ use mupdf::TextPageOptions;
 /// A vector of words with their bounding boxes.
 pub fn extract_word_positions(doc: &PDFDocument, page_num: u32) -> Result<Vec<Word>> {
     // Get the page
-    let page = doc.doc.load_page(page_num as i32)
-        .map_err(|e| VoxPDFError::ExtractionError(format!("Failed to load page {}: {}", page_num, e)))?;
+    let page = doc.doc.load_page(page_num as i32).map_err(|e| {
+        VoxPDFError::ExtractionError(format!("Failed to load page {}: {}", page_num, e))
+    })?;
 
     // Convert to text page
-    let text_page = page.to_text_page(TextPageOptions::empty())
+    let text_page = page
+        .to_text_page(TextPageOptions::empty())
         .map_err(|e| VoxPDFError::ExtractionError(format!("Failed to extract text: {}", e)))?;
 
     // Extract characters and group into words
@@ -93,11 +95,8 @@ pub fn extract_word_positions(doc: &PDFDocument, page_num: u32) -> Result<Vec<Wo
 
             // Finish word at end of line
             if !current_word.trim().is_empty() {
-                let word = create_word_from_chars(
-                    current_word.trim().to_string(),
-                    &word_chars,
-                    page_num,
-                );
+                let word =
+                    create_word_from_chars(current_word.trim().to_string(), &word_chars, page_num);
                 words.push(word);
                 current_word.clear();
                 word_chars.clear();
@@ -111,20 +110,28 @@ pub fn extract_word_positions(doc: &PDFDocument, page_num: u32) -> Result<Vec<Wo
 }
 
 /// Create a Word from a collection of characters
-fn create_word_from_chars(
-    text: String,
-    chars: &[(char, f32, f32, f32)],
-    page_num: u32,
-) -> Word {
+fn create_word_from_chars(text: String, chars: &[(char, f32, f32, f32)], page_num: u32) -> Word {
     if chars.is_empty() {
         return Word::new(text, Rect::new(0.0, 0.0, 0.0, 0.0), page_num);
     }
 
     // Calculate bounding box
-    let min_x = chars.iter().map(|(_, x, _, _)| *x).fold(f32::INFINITY, f32::min);
-    let min_y = chars.iter().map(|(_, _, y, _)| *y).fold(f32::INFINITY, f32::min);
-    let max_x = chars.iter().map(|(_, x, _, s)| x + s * 0.6).fold(f32::NEG_INFINITY, f32::max);
-    let max_y = chars.iter().map(|(_, _, y, s)| y + s).fold(f32::NEG_INFINITY, f32::max);
+    let min_x = chars
+        .iter()
+        .map(|(_, x, _, _)| *x)
+        .fold(f32::INFINITY, f32::min);
+    let min_y = chars
+        .iter()
+        .map(|(_, _, y, _)| *y)
+        .fold(f32::INFINITY, f32::min);
+    let max_x = chars
+        .iter()
+        .map(|(_, x, _, s)| x + s * 0.6)
+        .fold(f32::NEG_INFINITY, f32::max);
+    let max_y = chars
+        .iter()
+        .map(|(_, _, y, s)| y + s)
+        .fold(f32::NEG_INFINITY, f32::max);
 
     let width = max_x - min_x;
     let height = max_y - min_y;

@@ -1,6 +1,6 @@
 use crate::models::Paragraph;
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 
 // Regex to match hyphenation at end of words
 static HYPHEN_PATTERN: Lazy<Regex> = Lazy::new(|| {
@@ -9,10 +9,7 @@ static HYPHEN_PATTERN: Lazy<Regex> = Lazy::new(|| {
 });
 
 pub fn reassemble_hyphenated_words(paragraphs: Vec<Paragraph>) -> Vec<Paragraph> {
-    paragraphs
-        .into_iter()
-        .map(|para| reassemble_paragraph(para))
-        .collect()
+    paragraphs.into_iter().map(reassemble_paragraph).collect()
 }
 
 fn reassemble_paragraph(para: Paragraph) -> Paragraph {

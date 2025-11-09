@@ -8,7 +8,7 @@ fn test_reassemble_simple_hyphenation() {
         0,
         "This is an exam- ple of hyphenation".to_string(),
         0,
-        vec![]
+        vec![],
     );
 
     let result = reassemble_hyphenated_words(vec![para]);
@@ -20,12 +20,7 @@ fn test_reassemble_simple_hyphenation() {
 
 #[test]
 fn test_preserve_intentional_hyphens() {
-    let para = Paragraph::new(
-        0,
-        "This is a self-contained example".to_string(),
-        0,
-        vec![]
-    );
+    let para = Paragraph::new(0, "This is a self-contained example".to_string(), 0, vec![]);
 
     let result = reassemble_hyphenated_words(vec![para]);
 

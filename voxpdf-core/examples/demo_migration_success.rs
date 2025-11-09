@@ -1,5 +1,5 @@
-use voxpdf_core::PDFDocument;
 use voxpdf_core::extraction::extract_word_positions;
+use voxpdf_core::PDFDocument;
 
 fn main() {
     println!("╔═══════════════════════════════════════════════════════════╗");
@@ -14,7 +14,8 @@ fn main() {
     println!("📝 Words extracted: {}\n", words.len());
 
     for word in &words {
-        println!("  • '{}' @ ({:.1}, {:.1}) [{}x{}]",
+        println!(
+            "  • '{}' @ ({:.1}, {:.1}) [{}x{}]",
             word.text,
             word.bounds.x,
             word.bounds.y,

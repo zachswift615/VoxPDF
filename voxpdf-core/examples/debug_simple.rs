@@ -1,5 +1,5 @@
-use voxpdf_core::PDFDocument;
 use voxpdf_core::extraction::extract_word_positions;
+use voxpdf_core::PDFDocument;
 
 fn main() {
     let doc = PDFDocument::open("tests/fixtures/simple.pdf").unwrap();
@@ -7,7 +7,9 @@ fn main() {
 
     println!("Extracted {} words:", words.len());
     for word in &words {
-        println!("  '{}' at ({:.1}, {:.1}) size {:.1}x{:.1}",
-            word.text, word.bounds.x, word.bounds.y, word.bounds.width, word.bounds.height);
+        println!(
+            "  '{}' at ({:.1}, {:.1}) size {:.1}x{:.1}",
+            word.text, word.bounds.x, word.bounds.y, word.bounds.width, word.bounds.height
+        );
     }
 }

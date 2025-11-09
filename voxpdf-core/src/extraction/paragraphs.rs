@@ -1,4 +1,4 @@
-use crate::models::{Word, Paragraph};
+use crate::models::{Paragraph, Word};
 
 pub fn detect_paragraphs(words: Vec<Word>) -> Vec<Paragraph> {
     if words.is_empty() {
@@ -78,7 +78,7 @@ fn merge_lines_into_paragraphs(lines: Vec<Vec<Word>>) -> Vec<Paragraph> {
                     // Finish current paragraph
                     paragraphs.push(create_paragraph_from_lines(
                         paragraphs.len(),
-                        current_para_lines
+                        current_para_lines,
                     ));
                     current_para_lines = vec![line];
                 } else {
@@ -95,7 +95,7 @@ fn merge_lines_into_paragraphs(lines: Vec<Vec<Word>>) -> Vec<Paragraph> {
     if !current_para_lines.is_empty() {
         paragraphs.push(create_paragraph_from_lines(
             paragraphs.len(),
-            current_para_lines
+            current_para_lines,
         ));
     }
 

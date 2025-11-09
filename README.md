@@ -41,23 +41,23 @@ VoxPDF provides:
 - ✅ **Performance** - Native Rust/C-level speed without sacrificing memory safety
 - ✅ **Platform-native APIs** - Idiomatic Swift/Kotlin bindings with modern concurrency support
 
-## Current Status
+## Status
 
-**🚧 In Active Development**
+**Phase:** v0.1.0 Implementation - 95% Complete
 
-- **Current Phase**: Phase 0 (Foundation) - COMPLETE
-  - ✅ Project structure initialized
-  - ✅ Architecture documented (Rust core + FFI + bindings)
-  - ✅ Development roadmap established
+**What Works:**
+- ✅ Rust Core: Text extraction, word positions, paragraphs, TOC
+- ✅ FFI Layer: Complete C API for all extraction features
+- ✅ Swift Bindings: Full iOS/macOS support
+- ✅ iOS Build: XCFramework creation
 
-- **Next Step**: Slice 0 - lopdf validation spike (2-3 days)
-  - Validate word position extraction capabilities
-  - Decision point: Continue with lopdf or pivot to mupdf-sys
+**What's Left:**
+- End-to-end integration testing
+- Performance benchmarks
+- Documentation polish
+- Release prep (CHANGELOG, version tags)
 
-- **Target v0.1.0**: Basic text extraction better than PDFKit alone (4-6 weeks)
-- **Target v1.0.0**: Production-ready for technical books and papers (9-12 months)
-
-See [ROADMAP.md](docs/ROADMAP.md) for detailed milestones.
+**Next:** v0.2.0 - Multi-column layout support
 
 ## Quick Start
 

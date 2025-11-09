@@ -1,5 +1,5 @@
-use voxpdf_core::PDFDocument;
 use voxpdf_core::extraction::extract_toc;
+use voxpdf_core::PDFDocument;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -20,9 +20,13 @@ fn main() {
             println!("\n✅ TOC extracted: {} entries total", toc_entries.len());
 
             // Group by level
-            let mut by_level: std::collections::HashMap<u8, Vec<_>> = std::collections::HashMap::new();
+            let mut by_level: std::collections::HashMap<u8, Vec<_>> =
+                std::collections::HashMap::new();
             for entry in &toc_entries {
-                by_level.entry(entry.level).or_insert_with(Vec::new).push(entry);
+                by_level
+                    .entry(entry.level)
+                    .or_insert_with(Vec::new)
+                    .push(entry);
             }
 
             println!("\nEntries by level:");
@@ -32,7 +36,7 @@ fn main() {
                         0 => "chapters",
                         1 => "sections",
                         2 => "subsections",
-                        _ => "deeper levels"
+                        _ => "deeper levels",
                     };
                     println!("  Level {}: {} {}", level, entries.len(), label);
                 }
@@ -41,8 +45,10 @@ fn main() {
             println!("\nFirst 10 entries:");
             for (i, entry) in toc_entries.iter().take(10).enumerate() {
                 let indent = "  ".repeat(entry.level as usize);
-                println!("[{}] {}{} (page {}, level {})",
-                    i, indent, entry.title, entry.page_number, entry.level);
+                println!(
+                    "[{}] {}{} (page {}, level {})",
+                    i, indent, entry.title, entry.page_number, entry.level
+                );
             }
 
             if toc_entries.len() > 10 {

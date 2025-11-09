@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use super::Word;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Paragraph {
@@ -31,18 +31,9 @@ mod tests {
 
     #[test]
     fn test_paragraph_creation() {
-        let word = Word::new(
-            "test",
-            Rect::new(0.0, 0.0, 10.0, 10.0),
-            0
-        );
+        let word = Word::new("test", Rect::new(0.0, 0.0, 10.0, 10.0), 0);
 
-        let para = Paragraph::new(
-            0,
-            "test".to_string(),
-            0,
-            vec![word]
-        );
+        let para = Paragraph::new(0, "test".to_string(), 0, vec![word]);
 
         assert_eq!(para.index, 0);
         assert_eq!(para.text, "test");

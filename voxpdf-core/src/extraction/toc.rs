@@ -33,7 +33,7 @@ fn extract_toc_lopdf_fallback(doc: &PDFDocument) -> Result<Vec<TocEntry>> {
     use lopdf::Document as LoPdfDocument;
 
     // Load PDF with lopdf
-    let lopdf_doc = LoPdfDocument::load(&doc.path())?;
+    let lopdf_doc = LoPdfDocument::load(doc.path())?;
 
     // Get catalog and outlines
     let catalog = lopdf_doc.catalog()?;
@@ -75,7 +75,7 @@ fn traverse_lopdf_outline(
             let title = String::from_utf8_lossy(title_bytes).to_string();
 
             // Extract destination page (if available)
-            let page_number = extract_page_from_dest(doc, &outline_dict).unwrap_or(0);
+            let page_number = extract_page_from_dest(doc, outline_dict).unwrap_or(0);
 
             entries.push(TocEntry::new(title, level, page_number, 0));
         }
@@ -142,11 +142,7 @@ fn extract_page_from_dest(doc: &lopdf::Document, outline_dict: &lopdf::Dictionar
 }
 
 /// Recursively flatten the outline tree into a flat list of TOC entries
-fn flatten_outlines(
-    outlines: &[mupdf::Outline],
-    level: u8,
-    entries: &mut Vec<TocEntry>,
-) {
+fn flatten_outlines(outlines: &[mupdf::Outline], level: u8, entries: &mut Vec<TocEntry>) {
     for outline in outlines {
         // Create TOC entry from this outline entry
         let entry = TocEntry::new(

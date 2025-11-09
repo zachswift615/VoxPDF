@@ -1,5 +1,5 @@
-use voxpdf_core::{PDFDocument, extraction::extract_word_positions};
 use std::env;
+use voxpdf_core::{extraction::extract_word_positions, PDFDocument};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -41,7 +41,8 @@ fn main() {
         let line = &lines[i];
         let y_pos = line[0].bounds.y;
         let height = line[0].bounds.height;
-        let text_preview: String = line.iter()
+        let text_preview: String = line
+            .iter()
             .take(10)
             .map(|w| w.text.as_str())
             .collect::<Vec<_>>()
@@ -51,13 +52,20 @@ fn main() {
             let prev_y = lines[i - 1][0].bounds.y;
             let spacing = (y_pos - prev_y).abs();
             let ratio = spacing / height;
-            println!("Line {}: y={:.1}, height={:.1}, spacing={:.1}, ratio={:.2}x",
-                     i, y_pos, height, spacing, ratio);
-            println!("  Text: {}...\n", &text_preview[..text_preview.len().min(60)]);
+            println!(
+                "Line {}: y={:.1}, height={:.1}, spacing={:.1}, ratio={:.2}x",
+                i, y_pos, height, spacing, ratio
+            );
+            println!(
+                "  Text: {}...\n",
+                &text_preview[..text_preview.len().min(60)]
+            );
         } else {
-            println!("Line {}: y={:.1}, height={:.1}",
-                     i, y_pos, height);
-            println!("  Text: {}...\n", &text_preview[..text_preview.len().min(60)]);
+            println!("Line {}: y={:.1}, height={:.1}", i, y_pos, height);
+            println!(
+                "  Text: {}...\n",
+                &text_preview[..text_preview.len().min(60)]
+            );
         }
     }
 }

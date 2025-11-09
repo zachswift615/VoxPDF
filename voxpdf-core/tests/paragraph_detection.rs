@@ -1,5 +1,5 @@
+use voxpdf_core::extraction::{detect_paragraphs, extract_word_positions};
 use voxpdf_core::PDFDocument;
-use voxpdf_core::extraction::{extract_word_positions, detect_paragraphs};
 
 #[test]
 fn test_single_paragraph() {

@@ -1,5 +1,5 @@
-use voxpdf_core::PDFDocument;
 use voxpdf_core::extraction::extract_page_text;
+use voxpdf_core::PDFDocument;
 
 fn main() {
     println!("=== MuPDF Hyphen Fix Demo ===\n");
@@ -15,10 +15,17 @@ fn main() {
     // Show Unicode codepoints for each character
     for (i, c) in text.chars().enumerate() {
         if !c.is_whitespace() {
-            println!("  '{}' -> U+{:04X} ({})", c, c as u32,
-                if c == '\u{2010}' { "HYPHEN ✅" }
-                else if c == '!' { "EXCLAMATION ❌" }
-                else { "regular char" }
+            println!(
+                "  '{}' -> U+{:04X} ({})",
+                c,
+                c as u32,
+                if c == '\u{2010}' {
+                    "HYPHEN ✅"
+                } else if c == '!' {
+                    "EXCLAMATION ❌"
+                } else {
+                    "regular char"
+                }
             );
         }
     }

@@ -1,4 +1,4 @@
-use voxpdf_core::{PDFDocument, extraction::extract_word_positions};
+use voxpdf_core::{extraction::extract_word_positions, PDFDocument};
 
 #[test]
 fn test_extract_word_positions_simple() {
@@ -9,7 +9,11 @@ fn test_extract_word_positions_simple() {
     assert!(!words.is_empty(), "Should extract words from simple.pdf");
 
     // Verify text content (positions may vary, but text should be correct)
-    let text: String = words.iter().map(|w| w.text.as_str()).collect::<Vec<_>>().join(" ");
+    let text: String = words
+        .iter()
+        .map(|w| w.text.as_str())
+        .collect::<Vec<_>>()
+        .join(" ");
     assert!(text.contains("Hello"), "Should contain 'Hello'");
     assert!(text.contains("World"), "Should contain 'World'");
 }

@@ -4,9 +4,11 @@ use mupdf::TextPageOptions;
 
 /// Extract plain text from a PDF page
 pub fn extract_page_text(doc: &PDFDocument, page_num: u32) -> Result<String> {
-    let page = doc.doc.load_page(page_num as i32)
-        .map_err(|e| VoxPDFError::ExtractionError(format!("Failed to load page {}: {}", page_num, e)))?;
-    let text_page = page.to_text_page(TextPageOptions::empty())
+    let page = doc.doc.load_page(page_num as i32).map_err(|e| {
+        VoxPDFError::ExtractionError(format!("Failed to load page {}: {}", page_num, e))
+    })?;
+    let text_page = page
+        .to_text_page(TextPageOptions::empty())
         .map_err(|e| VoxPDFError::ExtractionError(format!("Failed to extract text: {}", e)))?;
 
     let mut text = String::new();

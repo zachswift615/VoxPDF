@@ -17,7 +17,10 @@ fn main() {
     println!("\nAttempting to extract outlines...");
     match doc._debug_outlines() {
         Ok(outlines) => {
-            println!("✅ Success! Got {} top-level outline entries", outlines.len());
+            println!(
+                "✅ Success! Got {} top-level outline entries",
+                outlines.len()
+            );
 
             if !outlines.is_empty() {
                 println!("\nFirst few entries:");
