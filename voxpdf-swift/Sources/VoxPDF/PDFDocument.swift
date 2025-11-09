@@ -140,4 +140,44 @@ public class PDFDocument {
 
         return paragraphs
     }
+
+    /// Extracts the table of contents from the document.
+    ///
+    /// - Returns: Array of TOC entries (empty if document has no TOC)
+    /// - Throws: `VoxPDFError` if extraction fails
+    public func tableOfContents() throws -> [TocEntry] {
+        var error: CVoxPDFError = CVoxPDFErrorOk
+
+        let count = voxpdf_get_toc_count(handle, &error)
+        guard error.rawValue == 0 else {
+            throw VoxPDFError(code: Int32(error.rawValue), context: "TOC extraction")
+        }
+
+        var entries: [TocEntry] = []
+        entries.reserveCapacity(count)
+
+        for index in 0..<count {
+            var cToc = CTocEntry(level: 0, page_number: 0, paragraph_index: 0)
+            var titlePtr: UnsafePointer<CChar>?
+
+            let result = voxpdf_get_toc_entry(
+                handle,
+                index,
+                &cToc,
+                &titlePtr,
+                &error
+            )
+
+            guard result, error.rawValue == 0, let ptr = titlePtr else {
+                throw VoxPDFError(code: Int32(error.rawValue), context: "TOC entry \(index)")
+            }
+
+            let title = String(cString: ptr)
+            voxpdf_free_string(UnsafeMutablePointer(mutating: ptr))
+
+            entries.append(TocEntry(title: title, cTocEntry: cToc))
+        }
+
+        return entries
+    }
 }

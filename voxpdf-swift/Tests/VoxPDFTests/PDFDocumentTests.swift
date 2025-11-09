@@ -83,4 +83,18 @@ final class PDFDocumentTests: XCTestCase {
         // First paragraph should contain text
         XCTAssertTrue(paragraphs[0].text.contains("Hello"))
     }
+
+    func testTableOfContents() throws {
+        let url = Bundle.module.url(
+            forResource: "simple",
+            withExtension: "pdf",
+            subdirectory: "TestPDFs"
+        )!
+
+        let doc = try PDFDocument(url: url)
+        let toc = try doc.tableOfContents()
+
+        // simple.pdf has no TOC, so should be empty
+        XCTAssertEqual(toc.count, 0)
+    }
 }
