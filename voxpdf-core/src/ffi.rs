@@ -52,6 +52,15 @@ pub struct CParagraph {
     pub word_count: usize,
 }
 
+/// C-compatible TOC entry structure.
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct CTocEntry {
+    pub level: u8,
+    pub page_number: u32,
+    pub paragraph_index: usize,
+}
+
 /// Open a PDF document from a file path.
 ///
 /// # Safety
@@ -356,6 +365,92 @@ pub unsafe extern "C" fn voxpdf_get_paragraph(
     }
 }
 
+/// Get the number of TOC entries in the document.
+///
+/// # Safety
+///
+/// - `doc` must be a valid pointer returned from `voxpdf_open`
+/// - `doc` must not have been freed with `voxpdf_free_document`
+/// - `error_out` must be a valid mutable pointer to CVoxPDFError
+#[no_mangle]
+pub unsafe extern "C" fn voxpdf_get_toc_count(
+    doc: *const CVoxPDFDocument,
+    error_out: *mut CVoxPDFError,
+) -> usize {
+    if doc.is_null() || error_out.is_null() {
+        return 0;
+    }
+
+    let doc = &*(doc as *const PDFDocument);
+
+    match crate::extraction::extract_toc(doc) {
+        Ok(toc_entries) => {
+            *error_out = CVoxPDFError::Ok;
+            toc_entries.len()
+        }
+        Err(e) => {
+            *error_out = e.into();
+            0
+        }
+    }
+}
+
+/// Get a specific TOC entry by index.
+///
+/// # Safety
+///
+/// - `doc` must be a valid pointer returned from `voxpdf_open`
+/// - `doc` must not have been freed with `voxpdf_free_document`
+/// - `toc_out` must be a valid mutable pointer to CTocEntry
+/// - `title_out` must be a valid mutable pointer
+/// - `error_out` must be a valid mutable pointer to CVoxPDFError
+/// - Caller must eventually call `voxpdf_free_string` on the returned title pointer
+#[no_mangle]
+pub unsafe extern "C" fn voxpdf_get_toc_entry(
+    doc: *const CVoxPDFDocument,
+    index: usize,
+    toc_out: *mut CTocEntry,
+    title_out: *mut *const c_char,
+    error_out: *mut CVoxPDFError,
+) -> bool {
+    if doc.is_null() || toc_out.is_null() || title_out.is_null() || error_out.is_null() {
+        return false;
+    }
+
+    let doc = &*(doc as *const PDFDocument);
+
+    match crate::extraction::extract_toc(doc) {
+        Ok(toc_entries) => {
+            if let Some(entry) = toc_entries.get(index) {
+                *toc_out = CTocEntry {
+                    level: entry.level,
+                    page_number: entry.page_number,
+                    paragraph_index: entry.paragraph_index,
+                };
+
+                match CString::new(entry.title.clone()) {
+                    Ok(c_str) => {
+                        *title_out = c_str.into_raw();
+                        *error_out = CVoxPDFError::Ok;
+                        return true;
+                    }
+                    Err(_) => {
+                        *error_out = CVoxPDFError::InvalidText;
+                        return false;
+                    }
+                }
+            }
+
+            *error_out = CVoxPDFError::PageNotFound;
+            false
+        }
+        Err(e) => {
+            *error_out = e.into();
+            false
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -460,6 +555,24 @@ mod tests {
             assert!(!text_ptr.is_null());
 
             voxpdf_free_string(text_ptr as *mut c_char);
+            voxpdf_free_document(doc);
+        }
+    }
+
+    #[test]
+    fn test_ffi_toc() {
+        let path = CString::new("tests/fixtures/simple.pdf").unwrap();
+        let mut error = CVoxPDFError::Ok;
+
+        unsafe {
+            let doc = voxpdf_open(path.as_ptr(), &mut error);
+            assert!(!doc.is_null());
+
+            // simple.pdf has no TOC, so should return 0
+            let count = voxpdf_get_toc_count(doc, &mut error);
+            assert_eq!(count, 0);
+            assert_eq!(error, CVoxPDFError::Ok);
+
             voxpdf_free_document(doc);
         }
     }
