@@ -23,5 +23,5 @@ pub mod models;
 pub mod pdf;
 
 pub use error::{Result, VoxPDFError};
-pub use models::{Chapter, Paragraph, Rect, Word};
+pub use models::{Paragraph, Rect, TocEntry, Word};
 pub use pdf::PDFDocument;

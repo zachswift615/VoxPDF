@@ -16,31 +16,37 @@ fn main() {
 
     // Extract TOC using the extraction function
     match extract_toc(&doc) {
-        Ok(chapters) => {
-            println!("\n✅ TOC extracted: {} chapters total", chapters.len());
+        Ok(toc_entries) => {
+            println!("\n✅ TOC extracted: {} entries total", toc_entries.len());
 
             // Group by level
             let mut by_level: std::collections::HashMap<u8, Vec<_>> = std::collections::HashMap::new();
-            for chapter in &chapters {
-                by_level.entry(chapter.level).or_insert_with(Vec::new).push(chapter);
+            for entry in &toc_entries {
+                by_level.entry(entry.level).or_insert_with(Vec::new).push(entry);
             }
 
-            println!("\nChapters by level:");
+            println!("\nEntries by level:");
             for level in 0..=3 {
-                if let Some(chaps) = by_level.get(&level) {
-                    println!("  Level {}: {} chapters", level, chaps.len());
+                if let Some(entries) = by_level.get(&level) {
+                    let label = match level {
+                        0 => "chapters",
+                        1 => "sections",
+                        2 => "subsections",
+                        _ => "deeper levels"
+                    };
+                    println!("  Level {}: {} {}", level, entries.len(), label);
                 }
             }
 
-            println!("\nFirst 10 chapters:");
-            for (i, chapter) in chapters.iter().take(10).enumerate() {
-                let indent = "  ".repeat(chapter.level as usize);
+            println!("\nFirst 10 entries:");
+            for (i, entry) in toc_entries.iter().take(10).enumerate() {
+                let indent = "  ".repeat(entry.level as usize);
                 println!("[{}] {}{} (page {}, level {})",
-                    i, indent, chapter.title, chapter.page_number, chapter.level);
+                    i, indent, entry.title, entry.page_number, entry.level);
             }
 
-            if chapters.len() > 10 {
-                println!("... and {} more chapters", chapters.len() - 10);
+            if toc_entries.len() > 10 {
+                println!("... and {} more entries", toc_entries.len() - 10);
             }
         }
         Err(e) => {

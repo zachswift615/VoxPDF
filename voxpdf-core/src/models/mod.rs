@@ -1,7 +1,7 @@
-mod chapter;
 mod paragraph;
+mod toc_entry;
 mod word;
 
-pub use chapter::Chapter;
 pub use paragraph::Paragraph;
+pub use toc_entry::TocEntry;
 pub use word::{Rect, Word};

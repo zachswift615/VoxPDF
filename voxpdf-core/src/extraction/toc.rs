@@ -1,8 +1,8 @@
 use crate::error::Result;
-use crate::models::Chapter;
+use crate::models::TocEntry;
 use crate::pdf::PDFDocument;
 
-pub fn extract_toc(doc: &PDFDocument) -> Result<Vec<Chapter>> {
+pub fn extract_toc(doc: &PDFDocument) -> Result<Vec<TocEntry>> {
     // Try mupdf first (fast, production-grade)
     let outlines = match doc.doc.outlines() {
         Ok(outlines) => outlines,
@@ -20,16 +20,16 @@ pub fn extract_toc(doc: &PDFDocument) -> Result<Vec<Chapter>> {
         }
     };
 
-    // Flatten the hierarchical outline into a list of chapters
-    let mut chapters = Vec::new();
-    flatten_outlines(&outlines, 0, &mut chapters);
+    // Flatten the hierarchical outline into a list of TOC entries
+    let mut entries = Vec::new();
+    flatten_outlines(&outlines, 0, &mut entries);
 
-    Ok(chapters)
+    Ok(entries)
 }
 
 /// Fallback TOC extraction using lopdf (more lenient with corrupted outlines)
 #[cfg(feature = "toc-fallback")]
-fn extract_toc_lopdf_fallback(doc: &PDFDocument) -> Result<Vec<Chapter>> {
+fn extract_toc_lopdf_fallback(doc: &PDFDocument) -> Result<Vec<TocEntry>> {
     use lopdf::Document as LoPdfDocument;
 
     // Load PDF with lopdf
@@ -54,10 +54,10 @@ fn extract_toc_lopdf_fallback(doc: &PDFDocument) -> Result<Vec<Chapter>> {
     let first_id = first_ref.as_reference()?;
 
     // Traverse outline tree
-    let mut chapters = Vec::new();
-    traverse_lopdf_outline(&lopdf_doc, first_id, 0, &mut chapters)?;
+    let mut entries = Vec::new();
+    traverse_lopdf_outline(&lopdf_doc, first_id, 0, &mut entries)?;
 
-    Ok(chapters)
+    Ok(entries)
 }
 
 #[cfg(feature = "toc-fallback")]
@@ -65,7 +65,7 @@ fn traverse_lopdf_outline(
     doc: &lopdf::Document,
     outline_id: lopdf::ObjectId,
     level: u8,
-    chapters: &mut Vec<Chapter>,
+    entries: &mut Vec<TocEntry>,
 ) -> Result<()> {
     let outline_dict = doc.get_dictionary(outline_id)?;
 
@@ -77,21 +77,21 @@ fn traverse_lopdf_outline(
             // Extract destination page (if available)
             let page_number = extract_page_from_dest(doc, &outline_dict).unwrap_or(0);
 
-            chapters.push(Chapter::new(title, level, page_number, 0));
+            entries.push(TocEntry::new(title, level, page_number, 0));
         }
     }
 
     // Traverse children (First)
     if let Ok(first_ref) = outline_dict.get(b"First") {
         if let Ok(first_id) = first_ref.as_reference() {
-            traverse_lopdf_outline(doc, first_id, level + 1, chapters)?;
+            traverse_lopdf_outline(doc, first_id, level + 1, entries)?;
         }
     }
 
     // Traverse siblings (Next)
     if let Ok(next_ref) = outline_dict.get(b"Next") {
         if let Ok(next_id) = next_ref.as_reference() {
-            traverse_lopdf_outline(doc, next_id, level, chapters)?;
+            traverse_lopdf_outline(doc, next_id, level, entries)?;
         }
     }
 
@@ -141,25 +141,25 @@ fn extract_page_from_dest(doc: &lopdf::Document, outline_dict: &lopdf::Dictionar
     None
 }
 
-/// Recursively flatten the outline tree into a flat list of chapters
+/// Recursively flatten the outline tree into a flat list of TOC entries
 fn flatten_outlines(
     outlines: &[mupdf::Outline],
     level: u8,
-    chapters: &mut Vec<Chapter>,
+    entries: &mut Vec<TocEntry>,
 ) {
     for outline in outlines {
-        // Create chapter from this outline entry
-        let chapter = Chapter::new(
+        // Create TOC entry from this outline entry
+        let entry = TocEntry::new(
             outline.title.clone(),
             level,
             outline.page.unwrap_or(0),
             0, // TODO: Map to paragraph_index when we have full document extraction
         );
-        chapters.push(chapter);
+        entries.push(entry);
 
         // Recursively process children
         if !outline.down.is_empty() {
-            flatten_outlines(&outline.down, level + 1, chapters);
+            flatten_outlines(&outline.down, level + 1, entries);
         }
     }
 }
