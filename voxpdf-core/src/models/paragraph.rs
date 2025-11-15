@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn test_paragraph_creation() {
-        let word = Word::new("test", Rect::new(0.0, 0.0, 10.0, 10.0), 0);
+        let word = Word::new("test", Rect::new(0.0, 0.0, 10.0, 10.0), 0, 12.0);
 
         let para = Paragraph::new(0, "test".to_string(), 0, vec![word]);
 

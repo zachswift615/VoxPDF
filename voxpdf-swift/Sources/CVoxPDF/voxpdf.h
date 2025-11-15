@@ -25,6 +25,7 @@ typedef struct {
     float width;
     float height;
     uint32_t page;
+    float font_size;
 } CWordPosition;
 
 // Paragraph structure

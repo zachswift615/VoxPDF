@@ -41,6 +41,7 @@ pub struct CWordPosition {
     pub width: f32,
     pub height: f32,
     pub page: u32,
+    pub font_size: f32,
 }
 
 /// C-compatible paragraph structure.
@@ -247,6 +248,7 @@ pub unsafe extern "C" fn voxpdf_get_word(
                     width: word.bounds.width,
                     height: word.bounds.height,
                     page: word.page_number,
+                    font_size: word.font_size,
                 };
 
                 match CString::new(word.text.clone()) {
@@ -516,6 +518,7 @@ mod tests {
                 width: 0.0,
                 height: 0.0,
                 page: 0,
+                font_size: 0.0,
             };
             let mut text_ptr: *const c_char = std::ptr::null();
 

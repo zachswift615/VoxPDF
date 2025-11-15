@@ -6,6 +6,7 @@ public struct Word {
     public let text: String
     public let bounds: CGRect
     public let pageNumber: Int
+    public let fontSize: Float
 
     init(text: String, cPosition: CWordPosition) {
         self.text = text
@@ -16,5 +17,6 @@ public struct Word {
             height: CGFloat(cPosition.height)
         )
         self.pageNumber = Int(cPosition.page)
+        self.fontSize = cPosition.font_size
     }
 }

@@ -112,7 +112,7 @@ pub fn extract_word_positions(doc: &PDFDocument, page_num: u32) -> Result<Vec<Wo
 /// Create a Word from a collection of characters
 fn create_word_from_chars(text: String, chars: &[(char, f32, f32, f32)], page_num: u32) -> Word {
     if chars.is_empty() {
-        return Word::new(text, Rect::new(0.0, 0.0, 0.0, 0.0), page_num);
+        return Word::new(text, Rect::new(0.0, 0.0, 0.0, 0.0), page_num, 0.0);
     }
 
     // Calculate bounding box
@@ -136,7 +136,10 @@ fn create_word_from_chars(text: String, chars: &[(char, f32, f32, f32)], page_nu
     let width = max_x - min_x;
     let height = max_y - min_y;
 
-    Word::new(text, Rect::new(min_x, min_y, width, height), page_num)
+    // Calculate average font size for this word
+    let avg_font_size = chars.iter().map(|(_, _, _, s)| s).sum::<f32>() / chars.len() as f32;
+
+    Word::new(text, Rect::new(min_x, min_y, width, height), page_num, avg_font_size)
 }
 
 #[cfg(test)]

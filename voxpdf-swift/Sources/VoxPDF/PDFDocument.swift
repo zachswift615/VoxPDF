@@ -65,7 +65,7 @@ public class PDFDocument {
         words.reserveCapacity(count)
 
         for index in 0..<count {
-            var cPosition = CWordPosition(x: 0, y: 0, width: 0, height: 0, page: 0)
+            var cPosition = CWordPosition(x: 0, y: 0, width: 0, height: 0, page: 0, font_size: 0)
             var textPtr: UnsafePointer<CChar>?
 
             let result = voxpdf_get_word(
