@@ -14,15 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! VoxPDF Core - PDF text extraction optimized for text-to-speech
+use voxpdf_core::cache::ExtractionCache;
+use voxpdf_core::models::{Word, Rect};
 
-pub mod cache;
-pub mod error;
-pub mod extraction;
-pub mod ffi;
-pub mod models;
-pub mod pdf;
+#[test]
+fn test_cache_operations() {
+    let cache = ExtractionCache::new();
+    let word = Word::new("test".to_string(), Rect::new(0.0, 0.0, 10.0, 10.0), 0, 12.0);
 
-pub use error::{Result, VoxPDFError};
-pub use models::{Paragraph, Rect, TocEntry, Word};
-pub use pdf::PDFDocument;
+    // Test empty cache
+    assert!(cache.get_words("doc.pdf", 0).is_none());
+
+    // Test set and get
+    cache.set_words("doc.pdf".to_string(), 0, vec![word.clone()]);
+    let cached = cache.get_words("doc.pdf", 0).unwrap();
+    assert_eq!(cached.len(), 1);
+    assert_eq!(cached[0].text, "test");
+
+    // Test clear
+    cache.clear();
+    assert!(cache.get_words("doc.pdf", 0).is_none());
+}
