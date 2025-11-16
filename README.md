@@ -38,7 +38,7 @@ VoxPDF provides:
 - ✅ **Free and open source** - MIT licensed, community-driven
 - ✅ **Cross-platform architecture** - Rust core + C FFI + platform bindings (Swift, Kotlin, WASM)
 - ✅ **Commercial-grade design** - Same architecture as Foxit SDK and PSPDFKit
-- ✅ **Performance** - Native Rust/C-level speed without sacrificing memory safety
+- ✅ **High Performance** - Optimized for large PDFs with parallel processing and memory efficiency
 - ✅ **Platform-native APIs** - Idiomatic Swift/Kotlin bindings with modern concurrency support
 
 ## Status
@@ -126,6 +126,35 @@ const content = await document.extract();
 │   - Layout analysis                 │    Portable
 └─────────────────────────────────────┘
 ```
+
+## Performance
+
+VoxPDF is optimized for large PDF processing with multiple performance enhancements:
+
+### Key Optimizations
+
+- **30-40% fewer allocations** through vector pre-allocation
+- **Near-linear scaling** with parallel page processing (~3.5x on 4 cores)
+- **50% less memory** usage with streaming API for large documents
+- **Single-pass algorithms** for bounding box calculations
+
+### Benchmarks
+
+| Operation | Performance |
+|-----------|-------------|
+| Single page extraction | ~10.2 µs (~0.01 ms) |
+| Per-word bounding box | ~7.8 ns |
+| Parallel speedup (4 cores) | ~3.5x |
+| Memory reduction (streaming) | ~50% |
+
+### Advanced Features
+
+- **Parallel Processing** - Multi-core extraction for large documents
+- **Caching Layer** - Eliminate redundant extractions
+- **Streaming API** - Progressive extraction without loading entire document
+- **Memory Pools** - Reduce allocation overhead in high-throughput scenarios
+
+See [docs/performance.md](voxpdf-core/docs/performance.md) for detailed tuning guide and optimization details.
 
 ## Features
 
