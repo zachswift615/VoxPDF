@@ -44,7 +44,7 @@ default = ["toc-fallback"]
 toc-fallback = ["lopdf"]  # Enable lopdf fallback for corrupted TOC structures
 
 [[bench]]
-name = "word_extraction_bench"
+name = "word_extraction"
 harness = false
 
 [profile.release]
