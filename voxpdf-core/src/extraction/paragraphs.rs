@@ -1,5 +1,8 @@
 use crate::models::{Paragraph, Word};
 
+const ESTIMATED_LINES_PER_PAGE: usize = 50;
+const ESTIMATED_PARAGRAPHS_PER_PAGE: usize = 10;
+
 pub fn detect_paragraphs(words: Vec<Word>) -> Vec<Paragraph> {
     if words.is_empty() {
         return Vec::new();
@@ -19,8 +22,8 @@ fn group_words_into_lines(words: Vec<Word>) -> Vec<Vec<Word>> {
         return Vec::new();
     }
 
-    let mut lines: Vec<Vec<Word>> = Vec::new();
-    let mut current_line: Vec<Word> = Vec::new();
+    let mut lines: Vec<Vec<Word>> = Vec::with_capacity(ESTIMATED_LINES_PER_PAGE);
+    let mut current_line: Vec<Word> = Vec::with_capacity(20); // Average words per line
     let mut current_y = words[0].bounds.y;
 
     const Y_THRESHOLD: f32 = 5.0; // Words within 5pts are on same line
@@ -52,7 +55,7 @@ fn merge_lines_into_paragraphs(lines: Vec<Vec<Word>>) -> Vec<Paragraph> {
         return Vec::new();
     }
 
-    let mut paragraphs: Vec<Paragraph> = Vec::new();
+    let mut paragraphs: Vec<Paragraph> = Vec::with_capacity(ESTIMATED_PARAGRAPHS_PER_PAGE);
     let mut current_para_lines: Vec<Vec<Word>> = Vec::new();
     let mut prev_line: Option<&Vec<Word>> = None;
 
