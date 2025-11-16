@@ -47,6 +47,10 @@ toc-fallback = ["lopdf"]  # Enable lopdf fallback for corrupted TOC structures
 name = "word_extraction"
 harness = false
 
+[[bench]]
+name = "bounding_box"
+harness = false
+
 [profile.release]
 opt-level = 3
 lto = true

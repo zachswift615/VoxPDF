@@ -119,29 +119,24 @@ fn create_word_from_chars(text: String, chars: &[(char, f32, f32, f32)], page_nu
         return Word::new(text, Rect::new(0.0, 0.0, 0.0, 0.0), page_num, 0.0);
     }
 
-    // Calculate bounding box
-    let min_x = chars
-        .iter()
-        .map(|(_, x, _, _)| *x)
-        .fold(f32::INFINITY, f32::min);
-    let min_y = chars
-        .iter()
-        .map(|(_, _, y, _)| *y)
-        .fold(f32::INFINITY, f32::min);
-    let max_x = chars
-        .iter()
-        .map(|(_, x, _, s)| x + s * 0.6)
-        .fold(f32::NEG_INFINITY, f32::max);
-    let max_y = chars
-        .iter()
-        .map(|(_, _, y, s)| y + s)
-        .fold(f32::NEG_INFINITY, f32::max);
+    // Single pass calculation instead of multiple fold operations
+    let mut min_x = f32::INFINITY;
+    let mut min_y = f32::INFINITY;
+    let mut max_x = f32::NEG_INFINITY;
+    let mut max_y = f32::NEG_INFINITY;
+    let mut font_size_sum = 0.0;
+
+    for &(_, x, y, size) in chars {
+        min_x = min_x.min(x);
+        min_y = min_y.min(y);
+        max_x = max_x.max(x + size * 0.6);
+        max_y = max_y.max(y + size);
+        font_size_sum += size;
+    }
 
     let width = max_x - min_x;
     let height = max_y - min_y;
-
-    // Calculate average font size for this word
-    let avg_font_size = chars.iter().map(|(_, _, _, s)| s).sum::<f32>() / chars.len() as f32;
+    let avg_font_size = font_size_sum / chars.len() as f32;
 
     Word::new(text, Rect::new(min_x, min_y, width, height), page_num, avg_font_size)
 }
