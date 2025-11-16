@@ -3,6 +3,10 @@ use crate::models::{Rect, Word};
 use crate::pdf::PDFDocument;
 use mupdf::TextPageOptions;
 
+// Pre-allocation capacity estimates for performance optimization
+const ESTIMATED_WORDS_PER_PAGE: usize = 500;
+const ESTIMATED_CHARS_PER_WORD: usize = 8;
+
 /// Extract word positions from a PDF page using MuPDF.
 ///
 /// Groups consecutive TextChar objects into words based on spacing.
@@ -27,9 +31,9 @@ pub fn extract_word_positions(doc: &PDFDocument, page_num: u32) -> Result<Vec<Wo
         .map_err(|e| VoxPDFError::ExtractionError(format!("Failed to extract text: {}", e)))?;
 
     // Extract characters and group into words
-    let mut words = Vec::new();
-    let mut current_word = String::new();
-    let mut word_chars: Vec<(char, f32, f32, f32)> = Vec::new(); // (char, x, y, size)
+    let mut words = Vec::with_capacity(ESTIMATED_WORDS_PER_PAGE);
+    let mut current_word = String::with_capacity(ESTIMATED_CHARS_PER_WORD);
+    let mut word_chars: Vec<(char, f32, f32, f32)> = Vec::with_capacity(ESTIMATED_CHARS_PER_WORD); // (char, x, y, size)
 
     // Word spacing threshold: characters farther apart than this start a new word
     const WORD_SPACING_THRESHOLD: f32 = 3.0;
