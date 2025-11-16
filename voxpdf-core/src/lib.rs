@@ -20,6 +20,7 @@ pub mod cache;
 pub mod error;
 pub mod extraction;
 pub mod ffi;
+pub mod memory_pool;
 pub mod models;
 pub mod pdf;
 
